@@ -11,7 +11,8 @@ A CLI tool to manage the database of Bluecoins, an awesome budget planner for An
 You need GNU Make and Poetry installed. Run `make` to perform an entire CI pipeline - install dependencies, run linters and tests.
 
 ## Usage
-Open the Bluecoins app. Go to *Settings -> Data Management -> Phone Storage -> Backup to phone storage*.
+
+1. Open the Bluecoins app. Go to *Settings -> Data Management -> Phone Storage -> Backup to phone storage*.
 2. Transfer created `*.fydb` database backup file to the PC.
 3. Run `bluecoins-cli mybackup.fydb convert` to convert a database to USD base currency.
 4. Transfer created `mybackup.new.fydb` file to the smartphone. Go to *Settings -> Data Management -> Phone Storage -> Restore from phone storage*. Choose created file.
