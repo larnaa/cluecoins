@@ -1,6 +1,14 @@
 # bluecoins-cli
 
+> 🚧 **WARNING** 🚧
+> 
+> This sortware is at the very early stage of development. Use at your own risk and make sure to always have a database backup!
+
 A CLI tool to manage the database of Bluecoins, an awesome budget planner for Android.
+
+## Installation
+
+You need GNU Make and Poetry installed. Run `make` to perform an entire CI pipeline - install dependencies, run linters and tests.
 
 ## Bluecoins database structure
 

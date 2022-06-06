@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "bluecoins-cli"
 version = "0.0.0"
-description = ""
-authors = ["Lev Gorodetskiy <github@droserasprout.space>"]
+description = "A CLI tool to manage the database of Bluecoins, an awesome budget planner for Android"
+license = "MIT"
+authors = [
+    "Lev Gorodetskiy <github@droserasprout.space>"
+]
 
 packages = [
     { include = "bluecoins_cli", from = "src" },
