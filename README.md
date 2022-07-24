@@ -44,3 +44,55 @@ Another example, select all categories and their groups:
 ```sql
 SELECT G.categoryGroupID, G.parentCategoryName, C.childCategoryName FROM CHILDCATEGORYTABLE C JOIN PARENTCATEGORYTABLE G ON C.parentCategoryID = G.parentCategoryTableID ORDER BY G.parentCategoryName, C.childCategoryName;
 ```
+___
+
+##  An archive command to move all account transactions to the virtual Archive account #6 
+
+1. Hides/deletes archive-account from the account list.
+    - Find accounts table.
+    - Find all tables with archive-account.
+    - Delete archive-account.
+2. Add teg to all transactions of archive-account. example: #bank_USD
+    - Find transactions table.
+    - Hide account from account selection. Change in ACCOUNTSTABLE: accountSelectorVisibility=1.
+    - Add a teg to the teg column in the table for each transaction that has archive-account in the account column.
+
+
+#### Hide from account selection and all reports
+
+**App**
+- transaction tab: hide in filter
+- transaction tab: hide selected account transactions
+- create transaction page: hide from account list
+- main page: hide from reports
+
+**BD**
+- `TRANSACTIONSTABL` - no changes
+- `ACCOUNTSTABLE` - accountHidden=1
+
+#### Hide from account selection
+
+**App**
+- transaction tab: hide in filter
+- create transaction page: hide from account list
+
+**BD**
+- `ACCOUNTSTABLE` - accountSelectorVisibility=1
+
+
+
+*In backup keep the language preference interface.*
+- `SETTINGSTABLE` - 2=%language%
+
+
+*Tables:*
+- `ACCOUNTSTABLE` - all created accounts;
+- `ACCOUNTTYPETABLE` - static info
+
+```text
+format beautiful SQL tables
+.headers on
+.mode column
+
+pragma table_info(?TABLE?); - view columns name
+```
