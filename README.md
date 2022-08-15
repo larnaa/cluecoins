@@ -48,14 +48,71 @@ ___
 
 ##  An archive command to move all account transactions to the virtual Archive account #6 
 
-1. Hides/deletes archive-account from the account list.
-    - Find accounts table.
-    - Find all tables with archive-account.
-    - Delete archive-account.
-2. Add teg to all transactions of archive-account. example: #bank_USD
-    - Find transactions table.
-    - Hide account from account selection. Change in ACCOUNTSTABLE: accountSelectorVisibility=1.
-    - Add a teg to the teg column in the table for each transaction that has archive-account in the account column.
+    !!! для всех пользовательских добавлять cli_ в начале, чтобы их не путать с системными (от приложения)
+
+    
+- Archive
+    1. **Check**: acc_old_balance==0
+        --where is Account balance? (check yourself)
+    2. **Check**: account Archive exists. If not - create. 
+        ```sql
+        -- find account Archive
+        SELECT * FROM ACCOUNTSTABLE
+        WHERE ACCOUNTSTABLE.accountName='Archive';
+
+        -- create account Archive
+        insert into ACCOUNTSTABLE(accountName)
+        values('Archive');
+        --what can I do with other columns in the table?
+        ```
+    2. For all transaction: **add** labels #cli_archive and #cli_%name_acc_old%
+        add label in LABELSTABLE with next last ID
+        ```sql
+        + labels : #cli_archive, #cli_%name_acc_old%
+
+        -- find  all transactions Archive account:
+        SELECT * FROM TRANSACTIONSTABLE
+        WHERE TRANSACTIONSTABLE.accountID == ACCOUNTSTABLE.accountsTableID;        
+
+        --add transactions in LABELSTABLE - rows
+        INSERT INTO LABELSTABLE(labelName,transactionIDLabels)
+        VALUES('cli_archive', /*TRANSACTIONSTABLE.transactionTableID*/);
+        -- same with #cli_%name_acc_old%
+        
+        -- transactionIDLabels - ID transactions from TRANSACTIONSTABLE - transactionTableID
+        ```
+
+    4. Move transactions to Archive account. AccountID==id_acc_archive.
+        ```sql
+        --change accountID in transactions to Archive ID
+        UPDATE TRANSACTIONSTABLE
+        SET accountID = 1651056086581 --ID old account
+        WHERE accountID == 1593593417685; --ID Archive account
+        ```
+    5. **Delete** acc_old.
+        ```sql
+        --delete old account
+        select * from ACCOUNTSTABLE;
+        where accountsTableID = 1593593417685; --ID old account
+        ```
+
+- Dearchive
+    1. **Check**: account with name from tag #cli_%name_archive_account% exists. If not - create.
+
+
+
+вытаскивание
+- вытащить транзакции с тегом #cli_%name_archive_account%
+- создать аккаунт с именем %name_archive_account%
+- перенести все транзы с тегом #cli_%name_archive_account% в новый аккаунт
+- удалить теги из всех транзакций
+
+
+Questions:
+- ACCOUNTSTABLE что такое accountCurrency и почему оно RUB, если меняли на USD, 
+- USD есть в настройках SETTINGSTABLE
+
+
 
 
 #### Hide from account selection and all reports
