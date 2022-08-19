@@ -14,6 +14,7 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
+from bluecoins_cli.database import create_Archive_account
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -62,3 +63,19 @@ async def convert(
             click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
 
     cache.save()
+
+@cli.command(help='Create Archive account')
+@click.pass_context
+async def create_archive(
+    ctx: click.Context
+) -> None:
+    conn = open_copy(ctx.obj['path'])
+
+    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
+    cache.load()
+
+    create_Archive_account(conn)
+
+    cache.save()
+    print('buy')
+    

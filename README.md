@@ -90,7 +90,7 @@ ___
     5. **Delete** acc_old.
         ```sql
         --delete old account
-        select * from ACCOUNTSTABLE;
+        delete from ACCOUNTSTABLE
         where accountsTableID = 1593593417685; --ID old account
         ```
 
