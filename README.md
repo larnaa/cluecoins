@@ -48,8 +48,6 @@ ___
 
 ##  An archive command to move all account transactions to the virtual Archive account #6 
 
-    !!! для всех пользовательских добавлять cli_ в начале, чтобы их не путать с системными (от приложения)
-
     
 - Archive
     1. **Check**: acc_old_balance==0
@@ -98,21 +96,6 @@ ___
 
 - Dearchive
     1. **Check**: account with name from tag #cli_%name_archive_account% exists. If not - create.
-
-
-
-вытаскивание
-- вытащить транзакции с тегом #cli_%name_archive_account%
-- создать аккаунт с именем %name_archive_account%
-- перенести все транзы с тегом #cli_%name_archive_account% в новый аккаунт
-- удалить теги из всех транзакций
-
-
-Questions:
-- ACCOUNTSTABLE что такое accountCurrency и почему оно RUB, если меняли на USD, 
-- USD есть в настройках SETTINGSTABLE
-
-
 
 
 #### Hide from account selection and all reports
