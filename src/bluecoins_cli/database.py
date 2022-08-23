@@ -55,3 +55,8 @@ def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
 
 def create_archive_account(conn: Connection) -> None:
     conn.execute("INSERT into ACCOUNTSTABLE(accountName) values('Archive');")
+
+
+def find_account(conn: Connection, account_name: str) -> tuple:
+    account = conn.cursor().execute(f"SELECT * FROM ACCOUNTSTABLE WHERE ACCOUNTSTABLE.accountName='{account_name}';")
+    return account.fetchone()

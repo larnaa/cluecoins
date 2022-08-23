@@ -15,6 +15,7 @@ from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
 from bluecoins_cli.database import create_archive_account
+from bluecoins_cli.database import find_account
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -64,7 +65,7 @@ async def convert(
 
     cache.save()
 
-@cli.command(help='Create Archive account')
+@cli.command(help='Create Archive account')     # can change to f"Create {name} account"
 @click.pass_context
 async def create_archive(
     ctx: click.Context
@@ -75,7 +76,9 @@ async def create_archive(
     cache.load()
 
     with transaction(conn) as conn:
-        create_archive_account(conn)
+
+        if find_account(conn, 'Arcihve') is None:
+            create_archive_account(conn)
 
     cache.save()
     
