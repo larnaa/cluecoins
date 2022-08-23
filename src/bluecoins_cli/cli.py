@@ -14,7 +14,7 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
-from bluecoins_cli.database import create_Archive_account
+from bluecoins_cli.database import create_archive_account
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -74,8 +74,8 @@ async def create_archive(
     cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
     cache.load()
 
-    create_Archive_account(conn)
+    with transaction(conn) as conn:
+        create_archive_account(conn)
 
     cache.save()
-    print('buy')
     

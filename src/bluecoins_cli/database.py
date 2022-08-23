@@ -53,6 +53,5 @@ def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
 def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     conn.execute(f"UPDATE ACCOUNTSTABLE SET accountConversionRateNew = '{rate}' WHERE accountsTableID = {id_};")
 
-def create_Archive_account(conn: Connection) -> None:
-    print('hi')
+def create_archive_account(conn: Connection) -> None:
     conn.execute("INSERT into ACCOUNTSTABLE(accountName) values('Archive');")
