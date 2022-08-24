@@ -53,6 +53,7 @@ def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
 def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     conn.execute(f"UPDATE ACCOUNTSTABLE SET accountConversionRateNew = '{rate}' WHERE accountsTableID = {id_};")
 
+
 def create_archive_account(conn: Connection) -> None:
     conn.execute("INSERT into ACCOUNTSTABLE(accountName) values('Archive');")
 
@@ -60,3 +61,13 @@ def create_archive_account(conn: Connection) -> None:
 def find_account(conn: Connection, account_name: str) -> tuple:
     account = conn.cursor().execute(f"SELECT * FROM ACCOUNTSTABLE WHERE ACCOUNTSTABLE.accountName='{account_name}';")
     return account.fetchone()
+
+
+def find_account_transactions_id(conn: Connection, account_id: int) -> tuple[int]:
+    transaction_id = conn.execute(
+        f"SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE TRANSACTIONSTABLE.accountID == {account_id};"
+    )
+    return transaction_id
+
+def add_label_to_transaction(conn: Connection, label_name: str, transaction_id: int) -> None:
+    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")

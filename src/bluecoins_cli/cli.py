@@ -16,6 +16,8 @@ from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
 from bluecoins_cli.database import create_archive_account
 from bluecoins_cli.database import find_account
+from bluecoins_cli.database import find_account_transactions_id
+from bluecoins_cli.database import add_label_to_transaction
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -65,6 +67,7 @@ async def convert(
 
     cache.save()
 
+
 @cli.command(help='Create Archive account')     # can change to f"Create {name} account"
 @click.pass_context
 async def create_archive(
@@ -81,4 +84,35 @@ async def create_archive(
             create_archive_account(conn)
 
     cache.save()
-    
+
+
+@cli.command(help='Add label to all account transactions')
+@click.pass_context
+async def add_label(                    # maybe name: add_label_to_all_account_transactions
+    ctx: click.Context,
+#    label_name: str,
+#    account_name
+) -> None:
+    conn = open_copy(ctx.obj['path'])
+
+    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
+    cache.load()
+
+    with transaction(conn) as conn:
+
+        label_name = 'cli_archive'
+        account_name = 'BoG GEL'
+        
+        # find account with name
+        account_info = find_account(conn, account_name)
+
+        # get ID account
+        account_id = account_info[0]
+
+        # find all transation with ID account and add labels with id transactions to LABELSTABEL
+        for transaction_id_tuple in find_account_transactions_id(conn, account_id):
+            transaction_id = transaction_id_tuple[0]
+            add_label_to_transaction(conn, label_name, transaction_id)
+
+
+    cache.save()

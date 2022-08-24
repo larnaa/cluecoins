@@ -64,7 +64,7 @@ ___
         --what can I do with other columns in the table?
         ```
     2. For all transaction: **add** labels #cli_archive and #cli_%name_acc_old%
-        add label in LABELSTABLE with next last ID
+        in LABELSTABLE with next last ID
         ```sql
         + labels : #cli_archive, #cli_%name_acc_old%
 
@@ -77,7 +77,7 @@ ___
         VALUES('cli_archive', /*TRANSACTIONSTABLE.transactionTableID*/);
         -- same with #cli_%name_acc_old%
         
-        -- transactionIDLabels - ID transactions from TRANSACTIONSTABLE - transactionTableID
+        -- transactionIDLabels - ID transactions from TRANSACTIONSTABLE
         ```
 
     4. Move transactions to Archive account. AccountID==id_acc_archive.
