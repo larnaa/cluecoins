@@ -87,11 +87,13 @@ async def create_archive(
 
 
 @cli.command(help='Add label to all account transactions')
+@click.option('-a', '--account_name', type=str)
+@click.option('-l', '--label_name', type=str)
 @click.pass_context
-async def add_label(                    # maybe name: add_label_to_all_account_transactions
+async def add_label(                                    # maybe name: add_label_to_all_account_transactions
     ctx: click.Context,
-#    label_name: str,
-#    account_name
+    account_name: str,
+    label_name: str,
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
@@ -99,20 +101,13 @@ async def add_label(                    # maybe name: add_label_to_all_account_t
     cache.load()
 
     with transaction(conn) as conn:
-
-        label_name = 'cli_archive'
-        account_name = 'BoG GEL'
         
-        # find account with name
         account_info = find_account(conn, account_name)
-
-        # get ID account
         account_id = account_info[0]
 
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
         for transaction_id_tuple in find_account_transactions_id(conn, account_id):
             transaction_id = transaction_id_tuple[0]
             add_label_to_transaction(conn, label_name, transaction_id)
-
 
     cache.save()
