@@ -54,8 +54,8 @@ def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     conn.execute(f"UPDATE ACCOUNTSTABLE SET accountConversionRateNew = '{rate}' WHERE accountsTableID = {id_};")
 
 
-def create_archive_account(conn: Connection) -> None:
-    conn.execute("INSERT into ACCOUNTSTABLE(accountName) values('Archive');")
+def create_new_account(conn: Connection, account_name) -> None:
+    conn.execute(f"INSERT into ACCOUNTSTABLE(accountName) values('{account_name}');")
 
 
 def find_account(conn: Connection, account_name: str) -> tuple:
@@ -69,5 +69,6 @@ def find_account_transactions_id(conn: Connection, account_id: int) -> tuple[int
     )
     return transaction_id
 
+
 def add_label_to_transaction(conn: Connection, label_name: str, transaction_id: int) -> None:
-    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")
+    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")    

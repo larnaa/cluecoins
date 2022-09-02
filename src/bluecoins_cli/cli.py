@@ -1,3 +1,4 @@
+from email.policy import default
 import os
 from datetime import datetime
 from datetime import timedelta
@@ -14,7 +15,7 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
-from bluecoins_cli.database import create_archive_account
+from bluecoins_cli.database import create_new_account
 from bluecoins_cli.database import find_account
 from bluecoins_cli.database import find_account_transactions_id
 from bluecoins_cli.database import add_label_to_transaction
@@ -68,10 +69,13 @@ async def convert(
     cache.save()
 
 
-@cli.command(help='Create Archive account')     # can change to f"Create {name} account"
+@cli.command(help='Create account with account name')
+@click.option('-a', '--account_name', type=str, default='Archive')
 @click.pass_context
-async def create_archive(
-    ctx: click.Context
+async def create_account(
+    ctx: click.Context,
+    account_name: str,
+
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
@@ -80,8 +84,8 @@ async def create_archive(
 
     with transaction(conn) as conn:
 
-        if find_account(conn, 'Arcihve') is None:
-            create_archive_account(conn)
+        if find_account(conn, account_name) is None:
+            create_new_account(conn, account_name)
 
     cache.save()
 
