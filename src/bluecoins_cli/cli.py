@@ -99,11 +99,7 @@ async def archive(
     account_name: str,
 ) -> None:
     conn = open_copy(ctx.obj['path'])
-
-    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
-    cache.load()
     
-
     with transaction(conn) as conn:
 
             # create_archive
@@ -124,8 +120,6 @@ async def archive(
             delete_account(conn, account_archive_id)
 
 
-    cache.save()
-
 
 @cli.command(help='Create account with account name')
 @click.option('-a', '--account_name', type=str, default='Archive')
@@ -137,15 +131,10 @@ async def create_account(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
-    cache.load()
-
     with transaction(conn) as conn:
 
         if find_account(conn, account_name) is None:
             create_new_account(conn, account_name)
-
-    cache.save()
 
 
 @cli.command(help='Add label to all account transactions')
@@ -159,9 +148,6 @@ async def add_label(                                    # maybe name: add_label_
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
-    cache.load()
-
     with transaction(conn) as conn:
         
         account_info = find_account(conn, account_name)
@@ -171,5 +157,3 @@ async def add_label(                                    # maybe name: add_label_
         for transaction_id_tuple in find_account_transactions_id(conn, account_id):
             transaction_id = transaction_id_tuple[0]
             add_label_to_transaction(conn, label_name, transaction_id)
-
-    cache.save()
