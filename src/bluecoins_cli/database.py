@@ -90,5 +90,5 @@ def move_transactions_to_account(conn: Connection, account_id_old: int, account_
     conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountID = {account_id_new} WHERE accountID == {account_id_old};")
 
 
-def delete_account(conn:Connection, account_id: int) -> None:
+def delete_account(conn: Connection, account_id: int) -> None:
     conn.execute(f"DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = {account_id};")

@@ -23,23 +23,24 @@ from bluecoins_cli.database import get_base_currency
 from bluecoins_cli.database import move_transactions_to_account
 from bluecoins_cli.database import delete_account
 
+from sqlite3 import Connection
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
 
 
-def create_account_def(conn, account_name: str, account_currency: str) -> None:
+def create_account_def(conn: Connection, account_name: str, account_currency: str) -> None:
     if find_account(conn, account_name) is None:
         create_new_account(conn, account_name, account_currency)
 
 
-def get_account_id(conn, account_name: str) -> int:
+def get_account_id(conn: Connection, account_name: str) -> int:
     account_info = find_account(conn, account_name)
     account_id = account_info[0]
     return account_id
 
 
-def add_label_to_all_account_transactions(conn, account_id: int, label_name: str) -> None:
+def add_label_to_all_account_transactions(conn: Connection, account_id: int, label_name: str) -> None:
     # find all transation with ID account and add labels with id transactions to LABELSTABEL
     for transaction_id_tuple in find_account_transactions_id(conn, account_id):
         transaction_id = transaction_id_tuple[0]
