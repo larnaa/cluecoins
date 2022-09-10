@@ -153,4 +153,4 @@ secrets.env
 *.db
 *.sqlite3
 
-my_ru.md
+*.tmp.md

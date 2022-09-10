@@ -39,11 +39,15 @@ def iter_transactions(conn: Connection) -> Iterator[tuple[datetime, int, Decimal
 
 def update_transaction(conn: Connection, id_: int, rate: Decimal, amount: Decimal) -> None:
     int_amount = int(amount * 1000000)
-    conn.execute(f"UPDATE TRANSACTIONSTABLE SET conversionRateNew = {rate}, amount = {int_amount} WHERE transactionsTableID = {id_};")
+    conn.execute(
+        f"UPDATE TRANSACTIONSTABLE SET conversionRateNew = {rate}, amount = {int_amount} WHERE transactionsTableID = {id_};"
+    )
 
 
 def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
-    for row in conn.cursor().execute("SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;"):
+    for row in conn.cursor().execute(
+        "SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;"
+    ):
         id_, currency, rate = row
         currency = currency.replace('USDT', 'USD')
         rate = Decimal(str(rate))
@@ -60,30 +64,28 @@ def find_account(conn: Connection, account_name: str) -> tuple:
 
 
 def find_account_transactions_id(conn: Connection, account_id: int) -> tuple[int]:
-    transaction_id = conn.execute(
+    return conn.execute(
         f"SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE TRANSACTIONSTABLE.accountID == {account_id};"
     )
-    return transaction_id
 
 
 def add_label_to_transaction(conn: Connection, label_name: str, transaction_id: int) -> None:
-    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")    
+    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")
 
 
 def get_base_currency(conn: Connection) -> str:
-    base_currency = conn.execute(
-        'SELECT defaultSettings FROM SETTINGSTABLE WHERE SETTINGSTABLE.settingsTableID = 1;'
-    )
+    base_currency = conn.execute('SELECT defaultSettings FROM SETTINGSTABLE WHERE SETTINGSTABLE.settingsTableID = 1;')
     return base_currency.fetchone()[0]
 
 
 # TODO: make variables mutable - accountTypeID and accountConversionRateNew
 
+
 def create_new_account(conn: Connection, account_name: str, account_currency: str) -> None:
     conn.execute(
         f'INSERT into ACCOUNTSTABLE(accountName, accountTypeID, accountCurrency, accountConversionRateNew) \
             VALUES("{account_name}", 2, "{account_currency}", 1);'
-        )
+    )
 
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
