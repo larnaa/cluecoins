@@ -19,10 +19,32 @@ from bluecoins_cli.database import create_new_account
 from bluecoins_cli.database import find_account
 from bluecoins_cli.database import find_account_transactions_id
 from bluecoins_cli.database import add_label_to_transaction
+from bluecoins_cli.database import get_base_currency
+from bluecoins_cli.database import move_transactions_to_account
+from bluecoins_cli.database import delete_account
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
+
+
+def create_account_def(conn, account_name: str, account_currency: str) -> None:
+    if find_account(conn, account_name) is None:
+        create_new_account(conn, account_name, account_currency)
+
+
+def get_account_id(conn, account_name: str) -> int:
+    account_info = find_account(conn, account_name)
+    account_id = account_info[0]
+    return account_id
+
+
+def add_label_to_all_account_transactions(conn, account_id: int, label_name: str) -> None:
+    # find all transation with ID account and add labels with id transactions to LABELSTABEL
+    for transaction_id_tuple in find_account_transactions_id(conn, account_id):
+        transaction_id = transaction_id_tuple[0]
+        add_label_to_transaction(conn, label_name, transaction_id)
+
 
 
 @click.group()
@@ -65,6 +87,42 @@ async def convert(
             true_rate = await cache.get_price(today, base_currency, currency)
             update_account(conn, id_, true_rate)
             click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
+
+    cache.save()
+
+
+@cli.command(help='Archive account')
+@click.option('-a', '--account_name', type=str)
+@click.pass_context
+async def archive( 
+    ctx: click.Context,  
+    account_name: str,
+) -> None:
+    conn = open_copy(ctx.obj['path'])
+
+    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
+    cache.load()
+    
+
+    with transaction(conn) as conn:
+
+            # create_archive
+            account_currency = get_base_currency(conn)
+            create_account_def(conn, 'Archive', account_currency)
+            
+            # add_label (2): cli_archive, cli_%name_acc_old%
+            account_id = get_account_id(conn, account_name)
+
+            add_label_to_all_account_transactions(conn, account_id, 'cli_archive')
+            add_label_to_all_account_transactions(conn, account_id, f'cli_{account_name}')
+
+            # change_account (transaction) to Archive
+            account_archive_id = get_account_id(conn, 'Archive')
+            move_transactions_to_account(conn, account_id, account_archive_id)
+            
+            # delete account
+            delete_account(conn, account_archive_id)
+
 
     cache.save()
 
