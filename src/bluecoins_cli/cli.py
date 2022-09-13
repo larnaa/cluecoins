@@ -23,7 +23,7 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
-from help_cli_functions import DB
+from bluecoins_cli.help_cli_functions import DB
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -113,9 +113,9 @@ async def create_account(
     conn = open_copy(ctx.obj['path'])
 
     with transaction(conn) as conn:
-
-        if find_account(conn, account_name) is None:
-            create_new_account(conn, account_name)
+        
+        account_currency = get_base_currency(conn)
+        DB.create_account(conn, account_name, account_currency)
 
 
 @cli.command(help='Add label to all account transactions')
@@ -131,10 +131,5 @@ async def add_label(  # maybe name: add_label_to_all_account_transactions
 
     with transaction(conn) as conn:
 
-        account_info = find_account(conn, account_name)
-        account_id = account_info[0]
-
-        # find all transation with ID account and add labels with id transactions to LABELSTABEL
-        for transaction_id_tuple in find_account_transactions_id(conn, account_id):
-            transaction_id = transaction_id_tuple[0]
-            add_label_to_transaction(conn, label_name, transaction_id)
+        account_id = DB.get_account_id(conn, account_name)
+        DB.add_label(conn, account_id, label_name)
