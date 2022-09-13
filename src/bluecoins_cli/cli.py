@@ -23,27 +23,11 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
+from help_cli_functions import DB
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
-
-
-def create_account_def(conn: Connection, account_name: str, account_currency: str) -> None:
-    if find_account(conn, account_name) is None:
-        create_new_account(conn, account_name, account_currency)
-
-
-def get_account_id(conn: Connection, account_name: str) -> int:
-    account_info = find_account(conn, account_name)
-    return account_info[0]
-
-
-def add_label_to_all_account_transactions(conn: Connection, account_id: int, label_name: str) -> None:
-    # find all transation with ID account and add labels with id transactions to LABELSTABEL
-    for transaction_id_tuple in find_account_transactions_id(conn, account_id):
-        transaction_id = transaction_id_tuple[0]
-        add_label_to_transaction(conn, label_name, transaction_id)
 
 
 @click.group()
@@ -103,16 +87,16 @@ async def archive(
 
         # create_archive
         account_currency = get_base_currency(conn)
-        create_account_def(conn, 'Archive', account_currency)
+        DB.create_account(conn, 'Archive', account_currency)
 
         # add_label (2): cli_archive, cli_%name_acc_old%
-        account_id = get_account_id(conn, account_name)
+        account_id = DB.get_account_id(conn, account_name)
 
-        add_label_to_all_account_transactions(conn, account_id, 'cli_archive')
-        add_label_to_all_account_transactions(conn, account_id, f'cli_{account_name}')
+        DB.add_label(conn, account_id, 'cli_archive')
+        DB.add_label(conn, account_id, f'cli_{account_name}')
 
         # change_account (transaction) to Archive
-        account_archive_id = get_account_id(conn, 'Archive')
+        account_archive_id = DB.get_account_id(conn, 'Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         # delete account
