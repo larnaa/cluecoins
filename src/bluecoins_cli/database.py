@@ -3,7 +3,10 @@ from contextlib import contextmanager
 from datetime import datetime
 from decimal import Decimal
 from sqlite3 import Connection
+from sqlite3 import Cursor
 from sqlite3 import connect
+from types import NoneType
+from typing import Any
 from typing import Iterator
 
 
@@ -58,12 +61,12 @@ def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     conn.execute(f"UPDATE ACCOUNTSTABLE SET accountConversionRateNew = '{rate}' WHERE accountsTableID = {id_};")
 
 
-def find_account(conn: Connection, account_name: str) -> tuple:
+def find_account(conn: Connection, account_name: str) -> Any:
     account = conn.cursor().execute(f"SELECT * FROM ACCOUNTSTABLE WHERE ACCOUNTSTABLE.accountName='{account_name}';")
     return account.fetchone()
 
 
-def find_account_transactions_id(conn: Connection, account_id: int) -> tuple[int]:
+def find_account_transactions_id(conn: Connection, account_id: int) -> Cursor:
     return conn.execute(
         f"SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE TRANSACTIONSTABLE.accountID == {account_id};"
     )
@@ -73,7 +76,7 @@ def add_label_to_transaction(conn: Connection, label_name: str, transaction_id: 
     conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")
 
 
-def get_base_currency(conn: Connection) -> str:
+def get_base_currency(conn: Connection) -> Any:
     base_currency = conn.execute('SELECT defaultSettings FROM SETTINGSTABLE WHERE SETTINGSTABLE.settingsTableID = 1;')
     return base_currency.fetchone()[0]
 

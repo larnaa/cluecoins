@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 from datetime import timedelta
@@ -23,7 +24,9 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
-from bluecoins_cli.help_cli_functions import DB
+from bluecoins_cli.help_cli_functions import DBConnection
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -83,20 +86,22 @@ async def archive(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
+    dbconnection = DBConnection(conn)
+
     with transaction(conn) as conn:
 
         # create_archive
         account_currency = get_base_currency(conn)
-        DB.create_account(conn, 'Archive', account_currency)
+        dbconnection.create_account('Archive', account_currency)
 
         # add_label (2): cli_archive, cli_%name_acc_old%
-        account_id = DB.get_account_id(conn, account_name)
+        account_id = dbconnection.get_account_id(account_name)
 
-        DB.add_label(conn, account_id, 'cli_archive')
-        DB.add_label(conn, account_id, f'cli_{account_name}')
+        dbconnection.add_label(account_id, 'cli_archive')
+        dbconnection.add_label(account_id, f'cli_{account_name}')
 
         # change_account (transaction) to Archive
-        account_archive_id = DB.get_account_id(conn, 'Archive')
+        account_archive_id = dbconnection.get_account_id('Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         # delete account
@@ -112,10 +117,12 @@ async def create_account(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
+    dbconnection = DBConnection(conn)
+
     with transaction(conn) as conn:
-        
+
         account_currency = get_base_currency(conn)
-        DB.create_account(conn, account_name, account_currency)
+        dbconnection.create_account(account_name, account_currency)
 
 
 @cli.command(help='Add label to all account transactions')
@@ -129,7 +136,9 @@ async def add_label(  # maybe name: add_label_to_all_account_transactions
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
+    dbconnection = DBConnection(conn)
+
     with transaction(conn) as conn:
 
-        account_id = DB.get_account_id(conn, account_name)
-        DB.add_label(conn, account_id, label_name)
+        account_id = dbconnection.get_account_id(account_name)
+        dbconnection.add_label(account_id, label_name)
