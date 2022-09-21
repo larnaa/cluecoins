@@ -136,3 +136,10 @@ format beautiful SQL tables
 
 pragma table_info(?TABLE?); - view columns name
 ```
+
+### Find out the scope influence on DB.
+
+ - CREATE a new Table - Bluecoins broke (no transactions in app).
+ - INSERT data in existing Tables - ok.
+ - DELETE data in existing Table - ok.
+ 
