@@ -90,22 +90,21 @@ async def archive(
 
     with transaction(conn) as conn:
 
-        # create_archive
         account_currency = get_base_currency(conn)
         dbconnection.create_account('Archive', account_currency)
 
-        # add_label (2): cli_archive, cli_%name_acc_old%
+        # add labels: cli_archive, cli_%name_acc_old%
         account_id = dbconnection.get_account_id(account_name)
 
         dbconnection.add_label(account_id, 'cli_archive')
         dbconnection.add_label(account_id, f'cli_{account_name}')
 
-        # change_account (transaction) to Archive
+        # FIX bag: some transactions "transfer between accounts" still have a deleted account after move transactions.
+        # move transactions to account Archive
         account_archive_id = dbconnection.get_account_id('Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)
 
-        # delete account
-        delete_account(conn, account_archive_id)
+        delete_account(conn, account_id)
 
 
 @cli.command(help='Create account with account name')
@@ -129,7 +128,7 @@ async def create_account(
 @click.option('-a', '--account_name', type=str)
 @click.option('-l', '--label_name', type=str)
 @click.pass_context
-async def add_label(  # maybe name: add_label_to_all_account_transactions
+async def add_label(
     ctx: click.Context,
     account_name: str,
     label_name: str,
