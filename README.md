@@ -44,3 +44,102 @@ Another example, select all categories and their groups:
 ```sql
 SELECT G.categoryGroupID, G.parentCategoryName, C.childCategoryName FROM CHILDCATEGORYTABLE C JOIN PARENTCATEGORYTABLE G ON C.parentCategoryID = G.parentCategoryTableID ORDER BY G.parentCategoryName, C.childCategoryName;
 ```
+___
+
+##  An archive command to move all account transactions to the virtual Archive account #6 
+
+    
+- Archive
+    1. **Check**: acc_old_balance==0
+        --where is Account balance? (check yourself)
+    2. **Check**: account Archive exists. If not - create. 
+        ```sql
+        -- find account Archive
+        SELECT * FROM ACCOUNTSTABLE
+        WHERE ACCOUNTSTABLE.accountName='Archive';
+
+        -- create account Archive
+        insert into ACCOUNTSTABLE(accountName)
+        values('Archive');
+        --what can I do with other columns in the table?
+        ```
+    2. For all transaction: **add** labels #cli_archive and #cli_%name_acc_old%
+        in LABELSTABLE with next last ID
+        ```sql
+        + labels : #cli_archive, #cli_%name_acc_old%
+
+        -- find  all transactions Archive account:
+        SELECT * FROM TRANSACTIONSTABLE
+        WHERE TRANSACTIONSTABLE.accountID == ACCOUNTSTABLE.accountsTableID;        
+
+        --add transactions in LABELSTABLE - rows
+        INSERT INTO LABELSTABLE(labelName,transactionIDLabels)
+        VALUES('cli_archive', /*TRANSACTIONSTABLE.transactionTableID*/);
+        -- same with #cli_%name_acc_old%
+        
+        -- transactionIDLabels - ID transactions from TRANSACTIONSTABLE
+        ```
+
+    4. Move transactions to Archive account. AccountID==id_acc_archive.
+        ```sql
+        --change accountID in transactions to Archive ID
+        UPDATE TRANSACTIONSTABLE
+        SET accountID = 1651056086581 --ID old account
+        WHERE accountID == 1593593417685; --ID Archive account
+        ```
+    5. **Delete** acc_old.
+        ```sql
+        --delete old account
+        delete from ACCOUNTSTABLE
+        where accountsTableID = 1593593417685; --ID old account
+        ```
+
+- Dearchive
+    1. **Check**: account with name from tag #cli_%name_archive_account% exists. If not - create.
+
+
+#### Hide from account selection and all reports
+
+**App**
+- transaction tab: hide in filter
+- transaction tab: hide selected account transactions
+- create transaction page: hide from account list
+- main page: hide from reports
+
+**BD**
+- `TRANSACTIONSTABLE` - no changes
+- `ACCOUNTSTABLE` - accountHidden=1
+
+#### Hide from account selection
+
+**App**
+- transaction tab: hide in filter
+- create transaction page: hide from account list
+
+**BD**
+- `ACCOUNTSTABLE` - accountSelectorVisibility=1
+
+
+
+*In backup keep the language preference interface.*
+- `SETTINGSTABLE` - 2=%language%
+
+
+*Tables:*
+- `ACCOUNTSTABLE` - all created accounts;
+- `ACCOUNTTYPETABLE` - static info
+
+```text
+format beautiful SQL tables
+.headers on
+.mode column
+
+pragma table_info(?TABLE?); - view columns name
+```
+
+### Find out the scope influence on DB.
+
+ - CREATE a new Table - Bluecoins broke (no transactions in app).
+ - INSERT data in existing Tables - ok.
+ - DELETE data in existing Table - ok.
+ 
