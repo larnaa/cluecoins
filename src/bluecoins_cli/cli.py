@@ -3,18 +3,13 @@ import os
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
-from email.policy import default
-from sqlite3 import Connection
 
 import asyncclick as click
 import xdg
 
 from bluecoins_cli.cache import QuoteCache
-from bluecoins_cli.database import add_label_to_transaction
-from bluecoins_cli.database import create_new_account
+from bluecoins_cli.database import DBConnection
 from bluecoins_cli.database import delete_account
-from bluecoins_cli.database import find_account
-from bluecoins_cli.database import find_account_transactions_id
 from bluecoins_cli.database import get_base_currency
 from bluecoins_cli.database import iter_accounts
 from bluecoins_cli.database import iter_transactions
@@ -24,7 +19,6 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
-from bluecoins_cli.help_cli_functions import DBConnection
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -99,7 +93,7 @@ async def archive(
         dbconnection.add_label(account_id, 'cli_archive')
         dbconnection.add_label(account_id, f'cli_{account_name}')
 
-        # FIX bag: some transactions "transfer between accounts" still have a deleted account after move transactions.
+        # FIXME: some transactions "transfer between accounts" still have a deleted account after move transactions.
         # move transactions to account Archive
         account_archive_id = dbconnection.get_account_id('Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)

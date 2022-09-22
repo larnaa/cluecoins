@@ -54,7 +54,8 @@ show_source = true
 extended_default_ignore = []
 
 [tool.flakeheaven.plugins]
-"flake8-*" = ["+*", "-C417", "-SIM106", "-SIM114", "-SIM102"]
+"*" = ["+*"]
+pycodestyle = ["-*"]
 flake8-docstrings = ["-*"]
 
 [build-system]

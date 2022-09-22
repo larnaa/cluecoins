@@ -5,7 +5,6 @@ from decimal import Decimal
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import connect
-from types import NoneType
 from typing import Any
 from typing import Iterator
 
@@ -81,10 +80,8 @@ def get_base_currency(conn: Connection) -> Any:
     return base_currency.fetchone()[0]
 
 
-# TODO: make variables mutable - accountTypeID and accountConversionRateNew
-
-
 def create_new_account(conn: Connection, account_name: str, account_currency: str) -> None:
+    # TODO: make variables mutable - accountTypeID and accountConversionRateNew (type: asset, rate: n/a)
     conn.execute(
         f'INSERT into ACCOUNTSTABLE(accountName, accountTypeID, accountCurrency, accountConversionRateNew) \
             VALUES("{account_name}", 2, "{account_currency}", 1);'
@@ -97,3 +94,22 @@ def move_transactions_to_account(conn: Connection, account_id_old: int, account_
 
 def delete_account(conn: Connection, account_id: int) -> None:
     conn.execute(f"DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = {account_id};")
+
+
+class DBConnection:
+    def __init__(self, conn: Connection) -> None:
+        self.conn = conn
+
+    def create_account(self, account_name: str, account_currency: str) -> None:
+        if find_account(self.conn, account_name) is None:
+            create_new_account(self.conn, account_name, account_currency)
+
+    def get_account_id(self, account_name: str) -> int:
+        account_info = find_account(self.conn, account_name)
+        return int(account_info[0])
+
+    def add_label(self, account_id: int, label_name: str) -> Any:
+        # find all transation with ID account and add labels with id transactions to LABELSTABEL
+        for transaction_id_tuple in find_account_transactions_id(self.conn, account_id):
+            transaction_id = transaction_id_tuple[0]
+            add_label_to_transaction(self.conn, label_name, transaction_id)

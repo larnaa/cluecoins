@@ -107,7 +107,7 @@ ___
 - main page: hide from reports
 
 **BD**
-- `TRANSACTIONSTABL` - no changes
+- `TRANSACTIONSTABLE` - no changes
 - `ACCOUNTSTABLE` - accountHidden=1
 
 #### Hide from account selection
