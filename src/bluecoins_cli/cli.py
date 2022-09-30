@@ -1,14 +1,11 @@
 import logging
-import os
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 
 import asyncclick as click
-import xdg
 
 from bluecoins_cli.cache import QuoteCache
-from bluecoins_cli.database import DBConnection
 from bluecoins_cli.database import delete_account
 from bluecoins_cli.database import get_base_currency
 from bluecoins_cli.database import iter_accounts
@@ -19,6 +16,8 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
+from bluecoins_cli.storage import BluecoinsStorage
+from bluecoins_cli.storage import Storage
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -44,8 +43,9 @@ async def convert(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    cache = QuoteCache(os.path.join(xdg.xdg_cache_home(), 'bluecoins-cli', 'quotes.json'))
-    cache.load()
+    storage = Storage()
+    storage.init()
+    cache = QuoteCache(storage)
 
     with transaction(conn) as conn:
         set_base_currency(conn, base_currency)
@@ -68,7 +68,7 @@ async def convert(
             update_account(conn, id_, true_rate)
             click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
 
-    cache.save()
+    storage.commit()
 
 
 @cli.command(help='Archive account')
@@ -80,22 +80,22 @@ async def archive(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    dbconnection = DBConnection(conn)
+    bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
 
         account_currency = get_base_currency(conn)
-        dbconnection.create_account('Archive', account_currency)
+        bluecoins_storage.create_account('Archive', account_currency)
 
         # add labels: cli_archive, cli_%name_acc_old%
-        account_id = dbconnection.get_account_id(account_name)
+        account_id = bluecoins_storage.get_account_id(account_name)
 
-        dbconnection.add_label(account_id, 'cli_archive')
-        dbconnection.add_label(account_id, f'cli_{account_name}')
+        bluecoins_storage.add_label(account_id, 'cli_archive')
+        bluecoins_storage.add_label(account_id, f'cli_{account_name}')
 
         # FIXME: some transactions "transfer between accounts" still have a deleted account after move transactions.
         # move transactions to account Archive
-        account_archive_id = dbconnection.get_account_id('Archive')
+        account_archive_id = bluecoins_storage.get_account_id('Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
@@ -110,12 +110,12 @@ async def create_account(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    dbconnection = DBConnection(conn)
+    bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
 
         account_currency = get_base_currency(conn)
-        dbconnection.create_account(account_name, account_currency)
+        bluecoins_storage.create_account(account_name, account_currency)
 
 
 @cli.command(help='Add label to all account transactions')
@@ -129,9 +129,9 @@ async def add_label(
 ) -> None:
     conn = open_copy(ctx.obj['path'])
 
-    dbconnection = DBConnection(conn)
+    bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
 
-        account_id = dbconnection.get_account_id(account_name)
-        dbconnection.add_label(account_id, label_name)
+        account_id = bluecoins_storage.get_account_id(account_name)
+        bluecoins_storage.add_label(account_id, label_name)
