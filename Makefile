@@ -59,3 +59,6 @@ adb-sync:
 	adb shell su 0 -c mv /data/local/tmp/${DB}.new.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb
 	adb shell su 0 -c mv /data/local/tmp/${DB}.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/${DB}.fydb
 	adb shell am start -n com.rammigsoftware.bluecoins/.ui.activities.main.MainActivity
+
+dump-schema:
+	sqlite3 bluecoins.fydb .schema > bluecoins.sql
