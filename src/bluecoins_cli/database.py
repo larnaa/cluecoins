@@ -7,6 +7,7 @@ from sqlite3 import Cursor
 from sqlite3 import connect
 from typing import Any
 from typing import Iterator
+from unicodedata import category
 
 
 def open_copy(path: str, postfix: str = '.new') -> Connection:
@@ -90,6 +91,7 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
     conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountID = {account_id_new} WHERE accountID == {account_id_old};")
+    conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountPairID = {account_id_new} WHERE accountPairID == {account_id_old};")
 
 
 def delete_account(conn: Connection, account_id: int) -> None:
@@ -105,11 +107,35 @@ class DBConnection:
             create_new_account(self.conn, account_name, account_currency)
 
     def get_account_id(self, account_name: str) -> int:
+        # TODO: add error - if account not found
         account_info = find_account(self.conn, account_name)
         return int(account_info[0])
 
     def add_label(self, account_id: int, label_name: str) -> Any:
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
         for transaction_id_tuple in find_account_transactions_id(self.conn, account_id):
+            print(transaction_id_tuple)
             transaction_id = transaction_id_tuple[0]
             add_label_to_transaction(self.conn, label_name, transaction_id)
+
+"""
+    def change_account(self, account_id_new: int, account_id_old: int):
+
+        transfer_group_id=1
+        categoryID = 3
+        
+        for transaction_id_tuple in find_account_transactions_id(self.conn, account_id):
+            if categoryID == 3:
+                move_transactions_to_account(self.conn, account_id_old, account_id_new)
+
+                move_pair_trnsfer_transaction_to_account(self.conn, transfer_group_id, account_id_new)
+
+
+
+        #if categoryID=3:
+            #- change: accountID=accountNewID
+            #- find secondary transaction where transferGroupID same
+            #- change: accountPairID=accountNewID
+        
+        move_transactions_to_account(self, account_id_new, account_id_old)
+"""
