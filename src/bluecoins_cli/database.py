@@ -117,25 +117,3 @@ class DBConnection:
             print(transaction_id_tuple)
             transaction_id = transaction_id_tuple[0]
             add_label_to_transaction(self.conn, label_name, transaction_id)
-
-"""
-    def change_account(self, account_id_new: int, account_id_old: int):
-
-        transfer_group_id=1
-        categoryID = 3
-        
-        for transaction_id_tuple in find_account_transactions_id(self.conn, account_id):
-            if categoryID == 3:
-                move_transactions_to_account(self.conn, account_id_old, account_id_new)
-
-                move_pair_trnsfer_transaction_to_account(self.conn, transfer_group_id, account_id_new)
-
-
-
-        #if categoryID=3:
-            #- change: accountID=accountNewID
-            #- find secondary transaction where transferGroupID same
-            #- change: accountPairID=accountNewID
-        
-        move_transactions_to_account(self, account_id_new, account_id_old)
-"""
