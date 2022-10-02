@@ -46,7 +46,7 @@ def update_transaction(conn: Connection, id_: int, rate: Decimal, amount: Decima
     int_amount = int(amount * 1000000)
     conn.execute(
         'UPDATE TRANSACTIONSTABLE SET conversionRateNew = ?, amount = ? WHERE transactionsTableID = ?',
-        (rate, int_amount, id_),
+        (str(rate), int_amount, id_),
     )
 
 
@@ -63,7 +63,7 @@ def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
 def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     conn.execute(
         'UPDATE ACCOUNTSTABLE SET accountConversionRateNew = ? WHERE accountsTableID = ?',
-        (rate, id_),
+        (str(rate), id_),
     )
 
 
