@@ -24,12 +24,15 @@ def transaction(conn: Connection) -> Iterator[Connection]:
 
 
 def set_base_currency(conn: Connection, base_currency: str) -> None:
-    conn.execute(f"UPDATE SETTINGSTABLE SET defaultSettings = '{base_currency}' WHERE settingsTableID = '1';")
+    conn.execute(
+        'UPDATE SETTINGSTABLE SET defaultSettings = ? WHERE settingsTableID = "1";',
+        (base_currency,),
+    )
 
 
 def iter_transactions(conn: Connection) -> Iterator[tuple[datetime, int, Decimal, str, Decimal]]:
     for row in conn.cursor().execute(
-        "select date, transactionsTableID, conversionRateNew, transactionCurrency, amount from TRANSACTIONSTABLE ORDER BY date DESC"
+        'SELECT date, transactionsTableID, conversionRateNew, transactionCurrency, amount FROM TRANSACTIONSTABLE ORDER BY date DESC'
     ):
         date, id_, rate, currency, amount = row
         date = datetime.fromisoformat(date)
@@ -42,13 +45,14 @@ def iter_transactions(conn: Connection) -> Iterator[tuple[datetime, int, Decimal
 def update_transaction(conn: Connection, id_: int, rate: Decimal, amount: Decimal) -> None:
     int_amount = int(amount * 1000000)
     conn.execute(
-        f"UPDATE TRANSACTIONSTABLE SET conversionRateNew = {rate}, amount = {int_amount} WHERE transactionsTableID = {id_};"
+        'UPDATE TRANSACTIONSTABLE SET conversionRateNew = ?, amount = ? WHERE transactionsTableID = ?',
+        (rate, int_amount, id_),
     )
 
 
 def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
     for row in conn.cursor().execute(
-        "SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;"
+        'SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;'
     ):
         id_, currency, rate = row
         currency = currency.replace('USDT', 'USD')
@@ -57,40 +61,57 @@ def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
 
 
 def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
-    conn.execute(f"UPDATE ACCOUNTSTABLE SET accountConversionRateNew = '{rate}' WHERE accountsTableID = {id_};")
+    conn.execute(
+        'UPDATE ACCOUNTSTABLE SET accountConversionRateNew = ? WHERE accountsTableID = ?',
+        (rate, id_),
+    )
 
 
 def find_account(conn: Connection, account_name: str) -> Any:
-    account = conn.cursor().execute(f"SELECT * FROM ACCOUNTSTABLE WHERE ACCOUNTSTABLE.accountName='{account_name}';")
+    account = conn.cursor().execute(
+        'SELECT * FROM ACCOUNTSTABLE WHERE accountName = ?',
+        (account_name,),
+    )
     return account.fetchone()
 
 
 def find_account_transactions_id(conn: Connection, account_id: int) -> Cursor:
     return conn.execute(
-        f"SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE TRANSACTIONSTABLE.accountID == {account_id};"
+        'SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE accountID = ?',
+        (account_id,),
     )
 
 
 def add_label_to_transaction(conn: Connection, label_name: str, transaction_id: int) -> None:
-    conn.execute(f"INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES('{label_name}', {transaction_id});")
+    conn.execute(
+        'INSERT INTO LABELSTABLE(labelName,transactionIDLabels) VALUES(?, ?)',
+        (label_name, transaction_id),
+    )
 
 
 def get_base_currency(conn: Connection) -> Any:
-    base_currency = conn.execute('SELECT defaultSettings FROM SETTINGSTABLE WHERE SETTINGSTABLE.settingsTableID = 1;')
+    base_currency = conn.execute('SELECT defaultSettings FROM SETTINGSTABLE WHERE settingsTableID = 1;')
     return base_currency.fetchone()[0]
 
 
 def create_new_account(conn: Connection, account_name: str, account_currency: str) -> None:
     # TODO: make variables mutable - accountTypeID and accountConversionRateNew (type: asset, rate: n/a)
     conn.execute(
-        f'INSERT into ACCOUNTSTABLE(accountName, accountTypeID, accountCurrency, accountConversionRateNew) \
-            VALUES("{account_name}", 2, "{account_currency}", 1);'
+        'INSERT INTO ACCOUNTSTABLE(accountName, accountTypeID, accountCurrency, accountConversionRateNew) \
+            VALUES(?, 2, ?, 1)',
+        (account_name, account_currency),
     )
 
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
-    conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountID = {account_id_new} WHERE accountID == {account_id_old};")
+    conn.execute(
+        'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE accountID = ?',
+        (account_id_new, account_id_old),
+    )
 
 
 def delete_account(conn: Connection, account_id: int) -> None:
-    conn.execute(f"DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = {account_id};")
+    conn.execute(
+        'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
+        (account_id,),
+    )
