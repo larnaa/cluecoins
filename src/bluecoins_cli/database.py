@@ -7,7 +7,6 @@ from sqlite3 import Cursor
 from sqlite3 import connect
 from typing import Any
 from typing import Iterator
-from unicodedata import category
 
 
 def open_copy(path: str, postfix: str = '.new') -> Connection:
@@ -91,7 +90,9 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
     conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountID = {account_id_new} WHERE accountID == {account_id_old};")
-    conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountPairID = {account_id_new} WHERE accountPairID == {account_id_old};")
+    conn.execute(
+        f"UPDATE TRANSACTIONSTABLE SET accountPairID = {account_id_new} WHERE accountPairID == {account_id_old};"
+    )
 
 
 def delete_account(conn: Connection, account_id: int) -> None:
@@ -114,6 +115,5 @@ class DBConnection:
     def add_label(self, account_id: int, label_name: str) -> Any:
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
         for transaction_id_tuple in find_account_transactions_id(self.conn, account_id):
-            print(transaction_id_tuple)
             transaction_id = transaction_id_tuple[0]
             add_label_to_transaction(self.conn, label_name, transaction_id)
