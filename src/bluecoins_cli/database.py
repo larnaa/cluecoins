@@ -90,6 +90,9 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
     conn.execute(f"UPDATE TRANSACTIONSTABLE SET accountID = {account_id_new} WHERE accountID == {account_id_old};")
+    conn.execute(
+        f"UPDATE TRANSACTIONSTABLE SET accountPairID = {account_id_new} WHERE accountPairID == {account_id_old};"
+    )
 
 
 def delete_account(conn: Connection, account_id: int) -> None:

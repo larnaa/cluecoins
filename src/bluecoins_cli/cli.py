@@ -93,7 +93,6 @@ async def archive(
         bluecoins_storage.add_label(account_id, 'cli_archive')
         bluecoins_storage.add_label(account_id, f'cli_{account_name}')
 
-        # FIXME: some transactions "transfer between accounts" still have a deleted account after move transactions.
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
         move_transactions_to_account(conn, account_id, account_archive_id)
