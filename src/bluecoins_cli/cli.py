@@ -16,6 +16,8 @@ from bluecoins_cli.database import set_base_currency
 from bluecoins_cli.database import transaction
 from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
+from bluecoins_cli.math_calculations import get_amount_original
+from bluecoins_cli.math_calculations import get_amount_quote
 from bluecoins_cli.storage import BluecoinsStorage
 from bluecoins_cli.storage import Storage
 
@@ -53,8 +55,8 @@ async def convert(
         for date, id_, rate, currency, amount in iter_transactions(conn):
             true_rate = await cache.get_price(date, base_currency, currency)
 
-            amount_original = amount * rate
-            amount_quote = amount_original / true_rate
+            amount_original = get_amount_original(amount, rate)
+            amount_quote = get_amount_quote(amount_original, true_rate)
 
             click.echo(
                 f"==> transaction {id_}: {q(amount_original)} {currency} -> {q(amount_quote)} {base_currency} ({q(true_rate)} {base_currency}{currency})"
