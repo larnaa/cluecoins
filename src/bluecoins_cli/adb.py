@@ -1,11 +1,10 @@
-from pathlib import Path
-from pickle import TRUE
 import subprocess
 
 from adbutils import adb  # type: ignore
 
 APP_ID = 'com.rammigsoftware.bluecoins'
 DB = "bluecoins-datetime"
+cli_command = 'convert'
 
 device_list = adb.device_list()
 
@@ -36,9 +35,21 @@ def get_app_user_id() -> int:
 
 
 def pull() -> None:
-    subprocess.run(f'adb shell su {APP_ID} -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb" > {DB}.fydb', shell=True, check=True)
+    subprocess.run(
+        f'adb shell su {APP_ID} -c "cat /data/user/0/{APP_ID}/databases/bluecoins.fydb" > {DB}.fydb',
+        shell=True,
+        check=True,
+    )
+
 
 pull()
+
+
+def cli_command_run() -> None:
+    subprocess.run(f'poetry run bluecoins-cli {DB}.fydb {cli_command}', shell=True, check=True)
+
+
+# cli_command_run()
 
 
 # run bluecoins
@@ -50,7 +61,7 @@ device.shell(f'pm enable {APP_ID}')
 #   + adb shell pm disable-user --user 0 com.rammigsoftware.bluecoins
 #   + adb shell dumpsys package com.rammigsoftware.bluecoins | grep userId
 # 	+ adb shell su 10128 -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb" > ${DB}.fydb
-# 	poetry run bluecoins-cli ${DB}.fydb convert
+# 	+ poetry run bluecoins-cli ${DB}.fydb convert
 # 	adb push ${DB}.new.fydb /data/local/tmp/${DB}.new.fydb
 # 	adb push ${DB}.fydb /data/local/tmp/${DB}.fydb
 # 	adb shell su 0 -c mv /data/local/tmp/${DB}.new.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb
