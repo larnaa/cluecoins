@@ -1,4 +1,6 @@
 from pathlib import Path
+from pickle import TRUE
+import subprocess
 
 from adbutils import adb  # type: ignore
 
@@ -34,11 +36,7 @@ def get_app_user_id() -> int:
 
 
 def pull() -> None:
-    bluecoins_database = device.shell(
-        f'su {get_app_user_id()} -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb"'
-    )
-    local_path = Path(f'{DB}.fydb')
-    local_path.write_bytes(bluecoins_database.encode())
+    subprocess.run(f'adb shell su {APP_ID} -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb" > {DB}.fydb', shell=True, check=True)
 
 pull()
 
