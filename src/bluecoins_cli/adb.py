@@ -5,8 +5,11 @@ from adbutils import adb  # type: ignore
 APP_ID = 'com.rammigsoftware.bluecoins'
 DB = "bluecoins-datetime"
 cli_command = 'convert'
+activity = '.ui.activities.main.MainActivity'
 
 device_list = adb.device_list()
+
+# Date = datetime()
 
 
 if not device_list:
@@ -25,7 +28,7 @@ device.app_stop(APP_ID)
 device.shell(f'pm disable-user --user 0 {APP_ID}')
 
 # adb root (restart adbd as root)
-# device.root()
+#
 
 
 def get_app_user_id() -> int:
@@ -42,7 +45,7 @@ def pull() -> None:
     )
 
 
-pull()
+# pull()
 
 
 def cli_command_run() -> None:
@@ -52,19 +55,15 @@ def cli_command_run() -> None:
 # cli_command_run()
 
 
-# run bluecoins
+def push_db_root() -> None:
+
+    device.sync.push(f'{DB}.new.fydb', f'/data/local/tmp/{DB}.new.fydb')
+    device.shell(f'su 0 -c mv /data/local/tmp/{DB}.new.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
+
+    device.sync.push(f'{DB}.fydb', f'/data/local/tmp/{DB}.fydb')
+    device.shell(f'su 0 -c mv /data/local/tmp/{DB}.fydb /data/user/0/{APP_ID}/databases/{DB}.fydb')
+
+
 device.shell(f'pm enable {APP_ID}')
 
-
-#   export DB="bluecoins-$(date +%s)"
-# 	+ adb shell am force-stop ${APP_ID}
-#   + adb shell pm disable-user --user 0 com.rammigsoftware.bluecoins
-#   + adb shell dumpsys package com.rammigsoftware.bluecoins | grep userId
-# 	+ adb shell su 10128 -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb" > ${DB}.fydb
-# 	+ poetry run bluecoins-cli ${DB}.fydb convert
-# 	adb push ${DB}.new.fydb /data/local/tmp/${DB}.new.fydb
-# 	adb push ${DB}.fydb /data/local/tmp/${DB}.fydb
-# 	adb shell su 0 -c mv /data/local/tmp/${DB}.new.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb
-# 	adb shell su 0 -c mv /data/local/tmp/${DB}.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/${DB}.fydb
-# 	adb shell am start -n com.rammigsoftware.bluecoins/.ui.activities.main.MainActivity
-#   + adb shell pm enable com.rammigsoftware.bluecoins
+device.app_start(APP_ID, activity)
