@@ -3,68 +3,67 @@ import subprocess
 
 from adbutils import adb  # type: ignore
 
-current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-APP_ID = 'com.rammigsoftware.bluecoins'
-DB = f"bluecoins-{current_time}"
-cli_command = 'convert'
-activity = '.ui.activities.main.MainActivity'
+def check_device() -> None:
+    device_list = adb.device_list()
 
-device_list = adb.device_list()
-
-# Date = datetime()
+    if not device_list:
+        raise Exception('Device is not found')
+    elif len(device_list) >= 2:
+        raise Exception('Found two or more devices. Connect only one device.')
 
 
-if not device_list:
-    raise Exception('Device is not found')
-elif len(device_list) >= 2:
-    raise Exception('Found two or more devices. Connect only one device.')
+class Device:
+    def __init__(self) -> None:
+        self.APP_ID = 'com.rammigsoftware.bluecoins'
 
-device = adb.device(serial=device_list[0].serial)
+        device_list = adb.device_list()
+        self.device = adb.device(serial=device_list[0].serial)
 
-print(device)
-print(device.serial)
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self.DB = f"bluecoins-{current_time}"
 
+    def stop_app(self) -> None:
+        self.device.app_stop(self.APP_ID)
+        self.device.shell(f'pm disable-user --user 0 {self.APP_ID}')
 
-def stop_app() -> None:
-    device.app_stop(APP_ID)
-    device.shell(f'pm disable-user --user 0 {APP_ID}')
+    def get_app_user_id(self) -> int:
+        user_response = self.device.shell(f'dumpsys package {self.APP_ID} | grep userId')
+        # split to list, take second element, str --> int
+        return int(user_response.split(sep='=')[1])
 
+    def pull_db(self) -> None:
+        subprocess.run(
+            f'adb shell su {self.APP_ID} -c "cat /data/user/0/{self.APP_ID}/databases/bluecoins.fydb" > {self.DB}.fydb',
+            shell=True,
+            check=True,
+        )
 
-def get_app_user_id() -> int:
-    user_response = device.shell(f'dumpsys package {APP_ID} | grep userId')
-    # split to list, take second element, str --> int
-    return int(user_response.split(sep='=')[1])
+    def cli_command_run(self, cli_command: str) -> None:
+        subprocess.run(f'poetry run bluecoins-cli {self.DB}.fydb {cli_command}', shell=True, check=True)
 
+    def push_db_root(self) -> None:
 
-def pull_db() -> None:
-    subprocess.run(
-        f'adb shell su {APP_ID} -c "cat /data/user/0/{APP_ID}/databases/bluecoins.fydb" > {DB}.fydb',
-        shell=True,
-        check=True,
-    )
+        self.device.sync.push(f'{self.DB}.new.fydb', f'/data/local/tmp/{self.DB}.new.fydb')
+        self.device.shell(
+            f'su 0 -c mv /data/local/tmp/{self.DB}.new.fydb /data/user/0/{self.APP_ID}/databases/bluecoins.fydb'
+        )
 
+        self.device.sync.push(f'{self.DB}.fydb', f'/data/local/tmp/{self.DB}.fydb')
+        self.device.shell(
+            f'su 0 -c mv /data/local/tmp/{self.DB}.fydb /data/user/0/{self.APP_ID}/databases/{self.DB}.fydb'
+        )
 
-def cli_command_run() -> None:
-    subprocess.run(f'poetry run bluecoins-cli {DB}.fydb {cli_command}', shell=True, check=True)
-
-
-def push_db_root() -> None:
-
-    device.sync.push(f'{DB}.new.fydb', f'/data/local/tmp/{DB}.new.fydb')
-    device.shell(f'su 0 -c mv /data/local/tmp/{DB}.new.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
-
-    device.sync.push(f'{DB}.fydb', f'/data/local/tmp/{DB}.fydb')
-    device.shell(f'su 0 -c mv /data/local/tmp/{DB}.fydb /data/user/0/{APP_ID}/databases/{DB}.fydb')
-
-
-def start_app() -> None:
-    device.shell(f'pm enable {APP_ID}')
-    device.app_start(APP_ID, activity)
+    def start_app(self, activity: str) -> None:
+        self.device.shell(f'pm enable {self.APP_ID}')
+        self.device.app_start(self.APP_ID, activity)
 
 
-stop_app()
-pull_db()
-cli_command_run()
-push_db_root()
-start_app()
+device = Device()
+
+check_device()
+device.stop_app()
+device.pull_db()
+device.cli_command_run('convert')
+device.push_db_root()
+device.start_app('.ui.activities.main.MainActivity')
