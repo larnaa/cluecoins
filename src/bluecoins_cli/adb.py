@@ -1,9 +1,12 @@
+import datetime
 import subprocess
 
 from adbutils import adb  # type: ignore
 
+current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
 APP_ID = 'com.rammigsoftware.bluecoins'
-DB = "bluecoins-datetime"
+DB = f"bluecoins-{current_time}"
 cli_command = 'convert'
 activity = '.ui.activities.main.MainActivity'
 
@@ -23,12 +26,9 @@ print(device)
 print(device.serial)
 
 
-# stop bluecoins
-device.app_stop(APP_ID)
-device.shell(f'pm disable-user --user 0 {APP_ID}')
-
-# adb root (restart adbd as root)
-#
+def stop_app() -> None:
+    device.app_stop(APP_ID)
+    device.shell(f'pm disable-user --user 0 {APP_ID}')
 
 
 def get_app_user_id() -> int:
@@ -37,7 +37,7 @@ def get_app_user_id() -> int:
     return int(user_response.split(sep='=')[1])
 
 
-def pull() -> None:
+def pull_db() -> None:
     subprocess.run(
         f'adb shell su {APP_ID} -c "cat /data/user/0/{APP_ID}/databases/bluecoins.fydb" > {DB}.fydb',
         shell=True,
@@ -45,14 +45,8 @@ def pull() -> None:
     )
 
 
-# pull()
-
-
 def cli_command_run() -> None:
     subprocess.run(f'poetry run bluecoins-cli {DB}.fydb {cli_command}', shell=True, check=True)
-
-
-# cli_command_run()
 
 
 def push_db_root() -> None:
@@ -64,6 +58,13 @@ def push_db_root() -> None:
     device.shell(f'su 0 -c mv /data/local/tmp/{DB}.fydb /data/user/0/{APP_ID}/databases/{DB}.fydb')
 
 
-device.shell(f'pm enable {APP_ID}')
+def start_app() -> None:
+    device.shell(f'pm enable {APP_ID}')
+    device.app_start(APP_ID, activity)
 
-device.app_start(APP_ID, activity)
+
+stop_app()
+pull_db()
+cli_command_run()
+push_db_root()
+start_app()
