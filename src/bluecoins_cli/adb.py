@@ -1,27 +1,32 @@
 import datetime
+from sqlite3 import connect
 import subprocess
 
 from adbutils import adb  # type: ignore
-
-
-def check_device() -> None:
-    device_list = adb.device_list()
-
-    if not device_list:
-        raise Exception('Device is not found')
-    elif len(device_list) >= 2:
-        raise Exception('Found two or more devices. Connect only one device.')
-
+from adbutils._device import AdbDevice
 
 class Device:
-    def __init__(self) -> None:
-        self.APP_ID = 'com.rammigsoftware.bluecoins'
+    def __init__(self, device: AdbDevice) -> None:
+        self.device = device
 
-        device_list = adb.device_list()
-        self.device = adb.device(serial=device_list[0].serial)
+        self.APP_ID = 'com.rammigsoftware.bluecoins'
 
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.DB = f"bluecoins-{current_time}"
+
+
+    @classmethod
+    def connect(cls) -> 'Device':
+        device_list = adb.device_list()
+
+        if not device_list:
+            raise Exception('Device is not found')
+        elif len(device_list) >= 2:
+            raise Exception('Found two or more devices. Connect only one device.')
+
+        device = adb.device(serial=device_list[0].serial)
+        return Device(device)
+
 
     def stop_app(self) -> None:
         self.device.app_stop(self.APP_ID)
@@ -59,9 +64,7 @@ class Device:
         self.device.app_start(self.APP_ID, activity)
 
 
-device = Device()
-
-check_device()
+device = Device.connect()
 device.stop_app()
 device.pull_db()
 device.cli_command_run('convert')
