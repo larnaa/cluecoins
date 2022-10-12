@@ -1,9 +1,9 @@
 import datetime
-from sqlite3 import connect
 import subprocess
 
 from adbutils import adb  # type: ignore
-from adbutils._device import AdbDevice
+from adbutils._device import AdbDevice  # type: ignore
+
 
 class Device:
     def __init__(self, device: AdbDevice) -> None:
@@ -13,7 +13,6 @@ class Device:
 
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.DB = f"bluecoins-{current_time}"
-
 
     @classmethod
     def connect(cls) -> 'Device':
@@ -26,7 +25,6 @@ class Device:
 
         device = adb.device(serial=device_list[0].serial)
         return Device(device)
-
 
     def stop_app(self) -> None:
         self.device.app_stop(self.APP_ID)
