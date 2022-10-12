@@ -48,17 +48,5 @@ release-major:
 	git push --tags
 	git push
 
-adb-sync:
-	set -e
-	export DB="bluecoins-$(date +%s)"
-	adb shell am force-stop com.rammig.bluecoins
-	adb shell su 10128 -c "cat /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb" > ${DB}.fydb
-	poetry run bluecoins-cli ${DB}.fydb convert
-	adb push ${DB}.new.fydb /data/local/tmp/${DB}.new.fydb
-	adb push ${DB}.fydb /data/local/tmp/${DB}.fydb
-	adb shell su 0 -c mv /data/local/tmp/${DB}.new.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/bluecoins.fydb
-	adb shell su 0 -c mv /data/local/tmp/${DB}.fydb /data/user/0/com.rammigsoftware.bluecoins/databases/${DB}.fydb
-	adb shell am start -n com.rammigsoftware.bluecoins/.ui.activities.main.MainActivity
-
 dump-schema:
 	sqlite3 bluecoins.fydb .schema > bluecoins.sql

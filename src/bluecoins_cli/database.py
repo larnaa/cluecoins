@@ -104,11 +104,11 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
 
 
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
-     conn.execute(
+    conn.execute(
         'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE accountID = ?',
         (account_id_new, account_id_old),
     )
-     conn.execute(
+    conn.execute(
         'UPDATE TRANSACTIONSTABLE SET accountPairID = ? WHERE accountPairID = ?',
         (account_id_new, account_id_old),
     )
