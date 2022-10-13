@@ -6,10 +6,10 @@ from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-PATH = '/home/larnaa/VScode_project/bluecoins-cli/src/bluecoins_cli/adb.py'
+ADB_SYNC_SCRIPT_PATH = '/home/larnaa/VScode_project/bluecoins-cli/src/bluecoins_cli/adb.py'
 
 
-CONFIG = """
+PYTERMGUI_CONFIG = """
 config:
     InputField:
         styles:
@@ -31,7 +31,7 @@ config:
 """
 
 with YamlLoader() as loader:
-    loader.load(CONFIG)
+    loader.load(PYTERMGUI_CONFIG)
 
 with WindowManager() as manager:
     window = (
@@ -43,7 +43,7 @@ with WindowManager() as manager:
             ),
             "",
             Container(
-                "In developing:",
+                "In development:",
                 InputField("- archive"),
                 box="EMPTY_VERTICAL",
             ),
@@ -51,7 +51,7 @@ with WindowManager() as manager:
             [
                 "Convert",
                 lambda *_: call(
-                    ["python", PATH],
+                    ["python", ADB_SYNC_SCRIPT_PATH],
                 ),
             ],
             width=60,
