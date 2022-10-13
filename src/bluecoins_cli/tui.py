@@ -1,7 +1,10 @@
-
-from turtle import home
-import pytermgui as ptg
 from subprocess import call
+
+from pytermgui.file_loaders import YamlLoader
+from pytermgui.widgets.containers import Container
+from pytermgui.widgets.input_field import InputField
+from pytermgui.window_manager.manager import WindowManager
+from pytermgui.window_manager.window import Window
 
 PATH = '/home/larnaa/VScode_project/bluecoins-cli/src/bluecoins_cli/adb.py'
 
@@ -27,24 +30,30 @@ config:
             corner: '96'
 """
 
-with ptg.YamlLoader() as loader:
+with YamlLoader() as loader:
     loader.load(CONFIG)
 
-with ptg.WindowManager() as manager:
+with WindowManager() as manager:
     window = (
-        ptg.Window(
+        Window(
             "",
-            ptg.InputField("A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.", multiline=True),
+            InputField(
+                "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                multiline=True,
+            ),
             "",
-            ptg.Container(
+            Container(
                 "In developing:",
-                ptg.InputField(
-                    "- archive"
-                ),
+                InputField("- archive"),
                 box="EMPTY_VERTICAL",
             ),
             "",
-            ["Convert", lambda *_: call(["python", PATH])],
+            [
+                "Convert",
+                lambda *_: call(
+                    ["python", PATH],
+                ),
+            ],
             width=60,
             box="DOUBLE",
         )
@@ -53,5 +62,3 @@ with ptg.WindowManager() as manager:
     )
 
     manager.add(window)
-
-
