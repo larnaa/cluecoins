@@ -62,10 +62,11 @@ class Device:
         self.device.app_start(APP_ID, activity)
 
 
-device = Device.connect()
-device.stop_app()
-db = get_db_name()
-device.pull_db(db)
-device.cli_command_run('convert', db)
-device.push_db_root(db)
-device.start_app('.ui.activities.main.MainActivity')
+def execute_cli_command_with_adb(cli_command: str, activity: str) -> None:
+    device = Device.connect()
+    device.stop_app()
+    db = get_db_name()
+    device.pull_db(db)
+    device.cli_command_run(cli_command, db)
+    device.push_db_root(db)
+    device.start_app(activity)

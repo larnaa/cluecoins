@@ -1,13 +1,10 @@
-from subprocess import call
-
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets.containers import Container
 from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-ADB_SYNC_SCRIPT_PATH = '/home/larnaa/VScode_project/bluecoins-cli/src/bluecoins_cli/adb.py'
-
+from bluecoins_cli.adb import execute_cli_command_with_adb
 
 PYTERMGUI_CONFIG = """
 config:
@@ -50,9 +47,7 @@ with WindowManager() as manager:
             "",
             [
                 "Convert",
-                lambda *_: call(
-                    ["python", ADB_SYNC_SCRIPT_PATH],
-                ),
+                lambda *_: execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity'),
             ],
             width=60,
             box="DOUBLE",
