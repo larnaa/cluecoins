@@ -1,0 +1,29 @@
+"TODO: change object/map diagram to class diagtam"
+
+@startuml
+object "currency" as cur {
+button: convert
+button: back
+}
+
+object "archive" as ar {
+accouts table
+button: archive
+button: back
+}
+
+object "accounts table" as table {
+account name
+currency
+balance
+}
+
+table o- ar
+
+map main {
+convert *-> cur
+archive *--> ar
+}
+
+note left of main : + status DB \n+ button: exit
+@enduml
