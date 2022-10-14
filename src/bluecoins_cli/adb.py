@@ -44,8 +44,8 @@ class Device:
             check=True,
         )
 
-    def cli_command_run(self, cli_command: str, db: str) -> None:
-        subprocess.run(f'bluecoins-cli {db}.fydb {cli_command}', shell=True, check=True)
+    def cli_command_run(self, cli_command: str, db: str, keys: str) -> None:
+        subprocess.run(f'bluecoins-cli {db}.fydb {cli_command}{keys}', shell=True, check=True)
 
     def push_db_root(self, db: str) -> None:
 
@@ -62,11 +62,11 @@ class Device:
         self.device.app_start(APP_ID, activity)
 
 
-def execute_cli_command_with_adb(cli_command: str, activity: str) -> None:
+def execute_cli_command_with_adb(cli_command: str, activity: str, keys: str = '') -> None:
     device = Device.connect()
     device.stop_app()
     db = get_db_name()
     device.pull_db(db)
-    device.cli_command_run(cli_command, db)
+    device.cli_command_run(cli_command, db, keys)
     device.push_db_root(db)
     device.start_app(activity)
