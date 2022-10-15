@@ -35,6 +35,29 @@ with YamlLoader() as loader:
 
 with WindowManager() as manager:
     main_window = Window(width=60, box="DOUBLE")
+    convert_window = Window()
+
+    currency_window = (
+        (
+            convert_window
+            + ""
+            + InputField(
+                "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                multiline=True,
+            )
+            + ""
+            + Container(
+                "In development:",
+                InputField("- archive"),
+                box="EMPTY_VERTICAL",
+            )
+            + ""
+            + Button('Exit programm', lambda *_: sys.exit(0))
+            + Button('Back', lambda *_: manager.remove(convert_window))
+        )
+        .center()
+    )
+
     window = (
         (
             main_window
@@ -52,6 +75,7 @@ with WindowManager() as manager:
             + ""
             + Button('Convert', lambda *_: execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity'))
             + Button('Exit programm', lambda *_: sys.exit(0))
+            + Button('Modal convert', lambda *_: manager.add(currency_window))
         )
         .set_title("[210 bold]Bluecoins CLI")
         .center()
