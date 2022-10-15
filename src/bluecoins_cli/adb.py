@@ -62,11 +62,19 @@ class Device:
         self.device.app_start(APP_ID, activity)
 
 
-def execute_cli_command_with_adb(cli_command: str, activity: str, keys: str = '') -> None:
+def execute_cli_command_with_adb(cli_command: str, activity: str, keys_value: str = '') -> None:
+    # TODO: create func: keys --> each key has separate variable
+    if keys_value != '':
+        keys = (f'--{keys_value}')
+    else:
+        keys = ''
+
     device = Device.connect()
     device.stop_app()
     db = get_db_name()
     device.pull_db(db)
+    # create tabel from lists
+    # run tui
     device.cli_command_run(cli_command, db, keys)
     device.push_db_root(db)
     device.start_app(activity)

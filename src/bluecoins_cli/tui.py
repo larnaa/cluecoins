@@ -30,33 +30,38 @@ config:
             corner: '96'
 """
 
-with YamlLoader() as loader:
-    loader.load(PYTERMGUI_CONFIG)
 
-with WindowManager() as manager:
-    main_window = Window(width=60, box="DOUBLE")
+def start_convert(base_currency: str) -> None:
+    if base_currency == 'USD':
+        execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity')
+    else:
+        execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity', base_currency)
+
+
+def choose_currency():
+    base_currency = 'USD'
     convert_window = Window()
 
     currency_window = (
         (
             convert_window
             + ""
-            + InputField(
-                "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                multiline=True,
-            )
+            + Button(base_currency, lambda *_: start_convert(base_currency))
             + ""
-            + Container(
-                "In development:",
-                InputField("- archive"),
-                box="EMPTY_VERTICAL",
-            )
-            + ""
-            + Button('Exit programm', lambda *_: sys.exit(0))
             + Button('Back', lambda *_: manager.remove(convert_window))
+            + Button('Exit programm', lambda *_: sys.exit(0))
         )
         .center()
     )
+
+    return currency_window
+
+
+with YamlLoader() as loader:
+    loader.load(PYTERMGUI_CONFIG)
+
+with WindowManager() as manager:
+    main_window = Window(width=60, box="DOUBLE")
 
     window = (
         (
@@ -73,9 +78,10 @@ with WindowManager() as manager:
                 box="EMPTY_VERTICAL",
             )
             + ""
-            + Button('Convert', lambda *_: execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity'))
+            + Button('Convert', lambda *_: manager.add(choose_currency()))
+            + ""
             + Button('Exit programm', lambda *_: sys.exit(0))
-            + Button('Modal convert', lambda *_: manager.add(currency_window))
+            + ""
         )
         .set_title("[210 bold]Bluecoins CLI")
         .center()
