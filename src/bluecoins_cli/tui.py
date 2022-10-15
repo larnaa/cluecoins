@@ -37,6 +37,9 @@ def start_convert(base_currency: str) -> None:
     else:
         execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity', base_currency)
 
+def start_archive(account_name: str) -> None:
+        execute_cli_command_with_adb('archive', '.ui.activities.main.MainActivity', account_name)
+
 
 def choose_currency():
     base_currency = 'USD'
@@ -47,6 +50,24 @@ def choose_currency():
             convert_window
             + ""
             + Button(base_currency, lambda *_: start_convert(base_currency))
+            + ""
+            + Button('Back', lambda *_: manager.remove(convert_window))
+            + Button('Exit programm', lambda *_: sys.exit(0))
+        )
+        .center()
+    )
+
+    return currency_window
+
+def choose_currency():
+    base_currency = 'USD'
+    convert_window = Window()
+
+    currency_window = (
+        (
+            convert_window
+            + ""
+            + "[Account table]"
             + ""
             + Button('Back', lambda *_: manager.remove(convert_window))
             + Button('Exit programm', lambda *_: sys.exit(0))
@@ -79,6 +100,8 @@ with WindowManager() as manager:
             )
             + ""
             + Button('Convert', lambda *_: manager.add(choose_currency()))
+            + ""
+            + Button('Archive', lambda *_: manager.add(choose_currency()))
             + ""
             + Button('Exit programm', lambda *_: sys.exit(0))
             + ""
