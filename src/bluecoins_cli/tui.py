@@ -11,6 +11,10 @@ from pytermgui.widgets import Label
 
 from bluecoins_cli.adb import execute_cli_command_with_adb
 
+import sqlite3 as lite
+from tabulate import tabulate
+from bluecoins_cli.database import get_account_table_tui
+
 PYTERMGUI_CONFIG = """
 config:
     InputField:
@@ -40,7 +44,8 @@ def start_convert(base_currency: str) -> None:
         execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity', base_currency)
 
 def start_archive(account_name: str) -> None:
-        execute_cli_command_with_adb('archive', '.ui.activities.main.MainActivity', account_name)
+
+    execute_cli_command_with_adb('archive', '.ui.activities.main.MainActivity', account_name)
 
 
 def choose_currency():
@@ -61,6 +66,18 @@ def choose_currency():
     return currency_window
 
 def choose_archive():
+
+    def create_account_table():
+        PATH_DB = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb' 
+        con = lite.connect(PATH_DB)
+
+        table = get_account_table_tui(con)
+        return tabulate(table)
+
+    account_table = create_account_table()
+
+    # TODO: function - get object "account table" 
+
     test_archive_account = 'Sberbank'
     window = Window()
 
@@ -68,7 +85,9 @@ def choose_archive():
         (
             window
             + ""
-            + "[Account table]"
+            + Label(
+                account_table,
+            )
             + ""
             + Button('Back', lambda *_: manager.remove(window))
         )
