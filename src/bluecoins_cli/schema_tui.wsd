@@ -1,4 +1,4 @@
-"TODO: change object/map diagram to class diagtam"
+"TODO: change object/map diagram to class diagram"
 
 @startuml
 object "currency" as cur {

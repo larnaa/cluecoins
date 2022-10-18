@@ -1,4 +1,5 @@
 import sys
+from tkinter import Label
 
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets.button import Button
@@ -6,6 +7,7 @@ from pytermgui.widgets.containers import Container
 from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
+from pytermgui.widgets import Label
 
 from bluecoins_cli.adb import execute_cli_command_with_adb
 
@@ -52,30 +54,28 @@ def choose_currency():
             + Button(base_currency, lambda *_: start_convert(base_currency))
             + ""
             + Button('Back', lambda *_: manager.remove(convert_window))
-            + Button('Exit programm', lambda *_: sys.exit(0))
         )
         .center()
     )
 
     return currency_window
 
-def choose_currency():
-    base_currency = 'USD'
-    convert_window = Window()
+def choose_archive():
+    test_archive_account = 'Sberbank'
+    window = Window()
 
-    currency_window = (
+    archive_window = (
         (
-            convert_window
+            window
             + ""
             + "[Account table]"
             + ""
-            + Button('Back', lambda *_: manager.remove(convert_window))
-            + Button('Exit programm', lambda *_: sys.exit(0))
+            + Button('Back', lambda *_: manager.remove(window))
         )
         .center()
     )
 
-    return currency_window
+    return archive_window
 
 
 with YamlLoader() as loader:
@@ -88,20 +88,19 @@ with WindowManager() as manager:
         (
             main_window
             + ""
-            + InputField(
+            + Label(
                 "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                multiline=True,
             )
             + ""
             + Container(
                 "In development:",
-                InputField("- archive"),
+                Label("- archive"),
                 box="EMPTY_VERTICAL",
             )
             + ""
             + Button('Convert', lambda *_: manager.add(choose_currency()))
             + ""
-            + Button('Archive', lambda *_: manager.add(choose_currency()))
+            + Button('Archive', lambda *_: manager.add(choose_archive()))
             + ""
             + Button('Exit programm', lambda *_: sys.exit(0))
             + ""
