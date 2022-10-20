@@ -65,7 +65,7 @@ class Device:
 def execute_cli_command_with_adb(cli_command: str, activity: str, keys_value: str = '') -> None:
     # TODO: create func: keys --> each key has separate variable
     if keys_value != '':
-        keys = (f'--{keys_value}')
+        keys = f'--{keys_value}'
     else:
         keys = ''
 

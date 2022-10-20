@@ -1,19 +1,23 @@
+from decimal import Overflow
+import sqlite3 as lite
 import sys
+from tkinter import ROUND
+from tkinter import SCROLL
 from tkinter import Label
+from tkinter.tix import AUTO
 
 from pytermgui.file_loaders import YamlLoader
+from pytermgui.widgets import Label
+from pytermgui.widgets.boxes import Box
 from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
 from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
-from pytermgui.widgets import Label
+from tabulate import tabulate
 
 from bluecoins_cli.adb import execute_cli_command_with_adb
-
-import sqlite3 as lite
-from tabulate import tabulate
-from bluecoins_cli.database import get_account_table_tui
+from bluecoins_cli.database import get_account_list
 
 PYTERMGUI_CONFIG = """
 config:
@@ -43,6 +47,7 @@ def start_convert(base_currency: str) -> None:
     else:
         execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity', base_currency)
 
+
 def start_archive(account_name: str) -> None:
 
     execute_cli_command_with_adb('archive', '.ui.activities.main.MainActivity', account_name)
@@ -53,46 +58,34 @@ def choose_currency():
     convert_window = Window()
 
     currency_window = (
-        (
-            convert_window
-            + ""
-            + Button(base_currency, lambda *_: start_convert(base_currency))
-            + ""
-            + Button('Back', lambda *_: manager.remove(convert_window))
-        )
-        .center()
-    )
+        convert_window
+        + ""
+        + Button(base_currency, lambda *_: start_convert(base_currency))
+        + ""
+        + Button('Back', lambda *_: manager.remove(convert_window))
+    ).center()
 
     return currency_window
 
+
 def choose_archive():
-
     def create_account_table():
-        PATH_DB = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb' 
-        con = lite.connect(PATH_DB)
+        path_test = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb'
+        con = lite.connect(path_test)
 
-        table = get_account_table_tui(con)
-        return tabulate(table)
+        account_table = Container()
+
+        for account in get_account_list(con):
+            acc = Button(account[0], lambda *_: start_archive(account[0]))
+            account_table += acc
+
+        return account_table
 
     account_table = create_account_table()
 
-    # TODO: function - get object "account table" 
+    window = Window(box="HEAVY")
 
-    test_archive_account = 'Sberbank'
-    window = Window()
-
-    archive_window = (
-        (
-            window
-            + ""
-            + Label(
-                account_table,
-            )
-            + ""
-            + Button('Back', lambda *_: manager.remove(window))
-        )
-        .center()
-    )
+    archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
 
     return archive_window
 
