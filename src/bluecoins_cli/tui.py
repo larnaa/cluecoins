@@ -1,20 +1,13 @@
-from decimal import Overflow
 import sqlite3 as lite
 import sys
-from tkinter import ROUND
-from tkinter import SCROLL
 from tkinter import Label
-from tkinter.tix import AUTO
 
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets import Label
-from pytermgui.widgets.boxes import Box
 from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
-from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
-from tabulate import tabulate
 
 from bluecoins_cli.adb import execute_cli_command_with_adb
 from bluecoins_cli.database import get_account_list
