@@ -5,6 +5,8 @@ from decimal import Decimal
 
 import asyncclick as click
 
+from bluecoins_cli.adb import Device
+from bluecoins_cli.adb import get_db_name
 from bluecoins_cli.cache import QuoteCache
 from bluecoins_cli.database import delete_account
 from bluecoins_cli.database import get_base_currency
@@ -18,6 +20,7 @@ from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
 from bluecoins_cli.storage import BluecoinsStorage
 from bluecoins_cli.storage import Storage
+from bluecoins_cli.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -27,11 +30,48 @@ def q(v: Decimal, prec: int = 2) -> Decimal:
 
 
 @click.group()
+@click.pass_context
+def root(
+    ctx: click.Context,
+):
+    ...
+
+
+@root.group(help='Start CLI')
 @click.argument('path', type=click.Path(exists=True))
 @click.pass_context
 def cli(ctx: click.Context, path: str) -> None:
     ctx.obj = {}
     ctx.obj['path'] = path
+
+
+@root.command(help='Start TUI')
+@click.pass_context
+async def tui(
+    ctx: click.Context,
+    cli_command: str,
+    activity: str,
+    keys_value: str = '',
+) -> None:
+    # create object Device
+    device = Device.connect()
+    db = get_db_name()
+
+    # run tui
+    device.stop_app()
+    db = get_db_name()
+    device.pull_db(db)
+    run_tui()
+
+    # TODO: create func: keys --> each key has separate variable
+    if keys_value != '':
+        keys = f'--{keys_value}'
+    else:
+        keys = ''
+
+    device.cli_command_run(cli_command, db, keys)
+    device.push_db_root(db)
+    device.start_app(activity)
 
 
 @cli.command(help='Convert database to another main currency')

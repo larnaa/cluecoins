@@ -1,4 +1,4 @@
-from bluecoins_cli.cli import cli
+from bluecoins_cli.cli import root
 
 if __name__ == '__main__':
-    cli(prog_name='bluecoins-cli', standalone_mode=False)
+    root(prog_name='bluecoins-cli', standalone_mode=False)
