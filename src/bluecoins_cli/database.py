@@ -75,7 +75,7 @@ def find_account(conn: Connection, account_name: str) -> Any:
     return account.fetchone()
 
 
-def get_account_list(conn: Connection) -> list:
+def get_account_list(conn: Connection) -> list[Any]:
     account = conn.cursor().execute(
         'SELECT accountName, accountConversionRateNew FROM ACCOUNTSTABLE',
     )

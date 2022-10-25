@@ -33,7 +33,7 @@ def q(v: Decimal, prec: int = 2) -> Decimal:
 @click.pass_context
 def root(
     ctx: click.Context,
-):
+) -> None:
     ...
 
 
@@ -112,7 +112,7 @@ async def convert(
 
 
 @cli.command(help='Archive account')
-@click.option('-a', '--account_name', type=str)
+@click.option('-a', '--account-name', type=str)
 @click.pass_context
 async def archive(
     ctx: click.Context,
@@ -141,7 +141,7 @@ async def archive(
 
 
 @cli.command(help='Create account with account name')
-@click.option('-a', '--account_name', type=str, default='Archive')
+@click.option('-a', '--account-name', type=str, default='Archive')
 @click.pass_context
 async def create_account(
     ctx: click.Context,
@@ -158,8 +158,8 @@ async def create_account(
 
 
 @cli.command(help='Add label to all account transactions')
-@click.option('-a', '--account_name', type=str)
-@click.option('-l', '--label_name', type=str)
+@click.option('-a', '--account-name', type=str)
+@click.option('-l', '--label-name', type=str)
 @click.pass_context
 async def add_label(
     ctx: click.Context,
