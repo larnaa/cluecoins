@@ -1,6 +1,5 @@
 import sqlite3 as lite
 import sys
-from typing import cast
 
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets import Label
@@ -9,8 +8,8 @@ from pytermgui.widgets.containers import Container
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-from bluecoins_cli.adb import execute_cli_command_with_adb
 from bluecoins_cli.database import get_account_list
+from bluecoins_cli.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
 config:
@@ -32,6 +31,9 @@ config:
             border: '96'
             corner: '96'
 """
+
+sync = SyncManager()
+DB = sync.prepare_local_db()
 
 
 def run_tui() -> None:
@@ -56,11 +58,11 @@ def run_tui() -> None:
                     box="EMPTY_VERTICAL",
                 )
                 + ""
-                + Button('Convert', lambda *_: manager.add(choose_currency(manager)))
+                + Button('Convert', lambda *_: manager.add(get_choose_currency_window(manager)))
                 + ""
-                + Button('Archive', lambda *_: manager.add(choose_archive(manager)))
+                + Button('Archive', lambda *_: manager.add(get_choose_account_archive_window(manager)))
                 + ""
-                + Button('Exit programm', lambda *_: sys.exit(0))
+                + Button('Exit programm', lambda *_: close_session())
                 + ""
             )
             .set_title("[210 bold]Bluecoins CLI")
@@ -70,57 +72,52 @@ def run_tui() -> None:
         manager.add(window)
 
 
-def choose_currency(manager: WindowManager) -> Window:
+def get_choose_currency_window(manager: WindowManager) -> Window:
+    # FIXME: hardcode
     base_currency = 'USD'
-    convert_window = Window()
+    window = Window()
 
     currency_window = (
-        convert_window
+        window
         + ""
         + Button(base_currency, lambda *_: start_convert(base_currency))
         + ""
-        + Button('Back', lambda *_: manager.remove(convert_window))
+        + Button('Back', lambda *_: manager.remove(window))
     ).center()
 
     return currency_window
 
 
-def choose_archive(manager: WindowManager) -> Window:
-    def create_account_table() -> Container:
-        path_test = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb'
-        con = lite.connect(path_test)
+def get_choose_account_archive_window(manager: WindowManager) -> Window:
+    # FIXME: hardcode
+    path_test = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb'
+    con = lite.connect(path_test)
 
-        account_table = Container()
+    account_table = Container()
 
-        for account in get_account_list(con):
-            acc = Button(account[0], lambda *_: new_start_archive(account[0]))
-            account_table += acc
-
-        return account_table
-
-    account_table = create_account_table()
+    for account in get_account_list(con):
+        acc = Button(account[0], lambda *_: archive_account(account[0]))
+        account_table += acc
 
     window = Window(box="HEAVY")
 
-    archive_window = (window + "" + account_table + "" / +Button('Back', lambda *_: manager.remove(window))).center()  # type: ignore
+    archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
 
-    return cast(Window, archive_window)
+    return archive_window
 
 
 def start_convert(base_currency: str) -> None:
-    if base_currency == 'USD':
-        execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity')
-    else:
-        execute_cli_command_with_adb('convert', '.ui.activities.main.MainActivity', base_currency)
+    import bluecoins_cli.cli as cli
+
+    cli._convert(base_currency, DB)
 
 
-def start_archive(account_name: str) -> None:
+def archive_account(account_name: str) -> None:
+    import bluecoins_cli.cli as cli
 
-    execute_cli_command_with_adb('archive', '.ui.activities.main.MainActivity', account_name)
-
-
-def new_start_archive(account_name: str) -> None:
-    execute_cli_command('archive', account_name)
+    cli._archive(account_name, DB)
 
 
-# run_tui()
+def close_session() -> None:
+    sync.push_changes_to_app('.ui.activities.main.MainActivity')
+    sys.exit(0)

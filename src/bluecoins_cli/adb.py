@@ -7,7 +7,7 @@ from adbutils._device import AdbDevice  # type: ignore
 APP_ID = 'com.rammigsoftware.bluecoins'
 
 
-def get_db_name() -> str:
+def generate_new_db_name() -> str:
     current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     return f"bluecoins-{current_time}"
 
@@ -60,19 +60,3 @@ class Device:
     def start_app(self, activity: str) -> None:
         self.device.shell(f'pm enable {APP_ID}')
         self.device.app_start(APP_ID, activity)
-
-
-def execute_cli_command_with_adb(cli_command: str, activity: str, keys_value: str = '') -> None:
-    # TODO: create func: keys --> each key has separate variable
-    if keys_value != '':
-        keys = f'--{keys_value}'
-    else:
-        keys = ''
-
-    device = Device.connect()
-    device.stop_app()
-    db = get_db_name()
-    device.pull_db(db)
-    device.cli_command_run(cli_command, db, keys)
-    device.push_db_root(db)
-    device.start_app(activity)

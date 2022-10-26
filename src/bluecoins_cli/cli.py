@@ -3,10 +3,8 @@ from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 
-import asyncclick as click
+import click
 
-from bluecoins_cli.adb import Device
-from bluecoins_cli.adb import get_db_name
 from bluecoins_cli.cache import QuoteCache
 from bluecoins_cli.database import delete_account
 from bluecoins_cli.database import get_base_currency
@@ -20,9 +18,15 @@ from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
 from bluecoins_cli.storage import BluecoinsStorage
 from bluecoins_cli.storage import Storage
+
+# from bluecoins_cli.sync_manager import SyncManager
 from bluecoins_cli.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
+
+
+# sync = SyncManager()
+# DB = sync.prepare_local_db()
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -47,41 +51,29 @@ def cli(ctx: click.Context, path: str) -> None:
 
 @root.command(help='Start TUI')
 @click.pass_context
-async def tui(
+def tui(
     ctx: click.Context,
-    cli_command: str,
-    activity: str,
-    keys_value: str = '',
 ) -> None:
-    # create object Device
-    device = Device.connect()
-    db = get_db_name()
-
-    # run tui
-    device.stop_app()
-    db = get_db_name()
-    device.pull_db(db)
     run_tui()
-
-    # TODO: create func: keys --> each key has separate variable
-    if keys_value != '':
-        keys = f'--{keys_value}'
-    else:
-        keys = ''
-
-    device.cli_command_run(cli_command, db, keys)
-    device.push_db_root(db)
-    device.start_app(activity)
 
 
 @cli.command(help='Convert database to another main currency')
 @click.argument('base_currency', default='USD')
 @click.pass_context
-async def convert(
+def convert(
     ctx: click.Context,
     base_currency: str,
+    db: str,
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    _convert(base_currency, db, ctx.obj['path'])
+
+
+def _convert(base_currency: str, db: str = '', path: str = '') -> None:
+
+    if db == '':
+        conn = open_copy(path)
+    else:
+        conn = open_copy(db)
 
     storage = Storage()
     storage.init()
@@ -91,7 +83,7 @@ async def convert(
         set_base_currency(conn, base_currency)
 
         for date, id_, rate, currency, amount in iter_transactions(conn):
-            true_rate = await cache.get_price(date, base_currency, currency)
+            true_rate = cache.get_price(date, base_currency, currency)
 
             amount_original = amount * rate
             amount_quote = amount_original / true_rate
@@ -104,7 +96,7 @@ async def convert(
 
         today = datetime.now() - timedelta(days=1)
         for id_, currency, rate in iter_accounts(conn):
-            true_rate = await cache.get_price(today, base_currency, currency)
+            true_rate = cache.get_price(today, base_currency, currency)
             update_account(conn, id_, true_rate)
             click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
 
@@ -114,11 +106,24 @@ async def convert(
 @cli.command(help='Archive account')
 @click.option('-a', '--account-name', type=str)
 @click.pass_context
-async def archive(
+def archive(
     ctx: click.Context,
     account_name: str,
+    db: str = '',
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    _archive(account_name, db, ctx.obj['path'])
+
+
+def _archive(
+    account_name: str,
+    db: str = '',
+    path: str = '',
+) -> None:
+
+    if db == '':
+        conn = open_copy(path)
+    else:
+        conn = open_copy(db)
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -143,7 +148,7 @@ async def archive(
 @cli.command(help='Create account with account name')
 @click.option('-a', '--account-name', type=str, default='Archive')
 @click.pass_context
-async def create_account(
+def create_account(
     ctx: click.Context,
     account_name: str,
 ) -> None:
@@ -161,7 +166,7 @@ async def create_account(
 @click.option('-a', '--account-name', type=str)
 @click.option('-l', '--label-name', type=str)
 @click.pass_context
-async def add_label(
+def add_label(
     ctx: click.Context,
     account_name: str,
     label_name: str,
