@@ -44,9 +44,6 @@ class Device:
             check=True,
         )
 
-    def cli_command_run(self, cli_command: str, db: str, keys: str) -> None:
-        subprocess.run(f'bluecoins-cli {db}.fydb {cli_command}{keys}', shell=True, check=True)
-
     def push_db_root(self, db: str) -> None:
 
         self.device.sync.push(f'{db}.new.fydb', f'/data/local/tmp/{db}.new.fydb')

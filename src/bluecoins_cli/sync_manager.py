@@ -5,9 +5,6 @@ device = Device.connect()
 
 
 class SyncManager:
-    def __init__(self) -> None:
-        self.db = generate_new_db_name()
-
     """
     1. create empty db with new name
     2. pull db
@@ -15,6 +12,9 @@ class SyncManager:
     4. clone db
     5. track db state
     """
+
+    def __init__(self) -> None:
+        self.db = generate_new_db_name()
 
     def prepare_local_db(self) -> str:
         device.stop_app()

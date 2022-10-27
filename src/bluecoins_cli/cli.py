@@ -18,15 +18,9 @@ from bluecoins_cli.database import update_account
 from bluecoins_cli.database import update_transaction
 from bluecoins_cli.storage import BluecoinsStorage
 from bluecoins_cli.storage import Storage
-
-# from bluecoins_cli.sync_manager import SyncManager
 from bluecoins_cli.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-# sync = SyncManager()
-# DB = sync.prepare_local_db()
 
 
 def q(v: Decimal, prec: int = 2) -> Decimal:
@@ -41,7 +35,7 @@ def root(
     ...
 
 
-@root.group(help='Start CLI')
+@root.group(help='CLI for managing Bluecoins with manual DB addition')
 @click.argument('path', type=click.Path(exists=True))
 @click.pass_context
 def cli(ctx: click.Context, path: str) -> None:
@@ -49,7 +43,7 @@ def cli(ctx: click.Context, path: str) -> None:
     ctx.obj['path'] = path
 
 
-@root.command(help='Start TUI')
+@root.command(help='Start user interface')
 @click.pass_context
 def tui(
     ctx: click.Context,
@@ -63,17 +57,13 @@ def tui(
 def convert(
     ctx: click.Context,
     base_currency: str,
-    db: str,
 ) -> None:
-    _convert(base_currency, db, ctx.obj['path'])
+    _convert(base_currency, ctx.obj['path'])
 
 
-def _convert(base_currency: str, db: str = '', path: str = '') -> None:
+def _convert(base_currency: str, db_path: str) -> None:
 
-    if db == '':
-        conn = open_copy(path)
-    else:
-        conn = open_copy(db)
+    conn = open_copy(db_path)
 
     storage = Storage()
     storage.init()
@@ -109,21 +99,16 @@ def _convert(base_currency: str, db: str = '', path: str = '') -> None:
 def archive(
     ctx: click.Context,
     account_name: str,
-    db: str = '',
 ) -> None:
-    _archive(account_name, db, ctx.obj['path'])
+    _archive(account_name, ctx.obj['path'])
 
 
 def _archive(
     account_name: str,
-    db: str = '',
-    path: str = '',
+    db_path: str,
 ) -> None:
 
-    if db == '':
-        conn = open_copy(path)
-    else:
-        conn = open_copy(db)
+    conn = open_copy(db_path)
 
     bluecoins_storage = BluecoinsStorage(conn)
 

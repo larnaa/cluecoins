@@ -1,5 +1,6 @@
 import sqlite3 as lite
 import sys
+from functools import partial
 
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets import Label
@@ -96,7 +97,11 @@ def get_choose_account_archive_window(manager: WindowManager) -> Window:
     account_table = Container()
 
     for account in get_account_list(con):
-        acc = Button(account[0], lambda *_: archive_account(account[0]))
+        account_name = account[0]
+        acc = Button(
+            account_name,
+            partial(archive_account, account_name=account_name),
+        )
         account_table += acc
 
     window = Window(box="HEAVY")
@@ -112,7 +117,7 @@ def start_convert(base_currency: str) -> None:
     cli._convert(base_currency, DB)
 
 
-def archive_account(account_name: str) -> None:
+def archive_account(button, account_name: str) -> None:
     import bluecoins_cli.cli as cli
 
     cli._archive(account_name, DB)
