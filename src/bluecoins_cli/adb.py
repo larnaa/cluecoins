@@ -7,7 +7,7 @@ from adbutils._device import AdbDevice  # type: ignore
 APP_ID = 'com.rammigsoftware.bluecoins'
 
 
-def get_db_name() -> str:
+def generate_new_db_name() -> str:
     current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     return f"bluecoins-{current_time}"
 
@@ -44,11 +44,9 @@ class Device:
             check=True,
         )
 
-    def cli_command_run(self, cli_command: str, db: str) -> None:
-        subprocess.run(f'bluecoins-cli {db}.fydb {cli_command}', shell=True, check=True)
-
     def push_db_root(self, db: str) -> None:
 
+        # TODO: add a check if file.new.fydb exists
         self.device.sync.push(f'{db}.new.fydb', f'/data/local/tmp/{db}.new.fydb')
         # FIXME: don't use root
         self.device.shell(f'su 0 -c mv /data/local/tmp/{db}.new.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
@@ -60,12 +58,3 @@ class Device:
     def start_app(self, activity: str) -> None:
         self.device.shell(f'pm enable {APP_ID}')
         self.device.app_start(APP_ID, activity)
-
-
-device = Device.connect()
-device.stop_app()
-db = get_db_name()
-device.pull_db(db)
-device.cli_command_run('convert', db)
-device.push_db_root(db)
-device.start_app('.ui.activities.main.MainActivity')

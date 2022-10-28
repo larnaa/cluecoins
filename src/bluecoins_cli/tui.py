@@ -1,13 +1,16 @@
-from subprocess import call
+import sqlite3 as lite
+import sys
+from functools import partial
 
 from pytermgui.file_loaders import YamlLoader
+from pytermgui.widgets import Label
+from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
-from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-ADB_SYNC_SCRIPT_PATH = '/home/larnaa/VScode_project/bluecoins-cli/src/bluecoins_cli/adb.py'
-
+from bluecoins_cli.database import get_account_list
+from bluecoins_cli.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
 config:
@@ -30,35 +33,91 @@ config:
             corner: '96'
 """
 
-with YamlLoader() as loader:
-    loader.load(PYTERMGUI_CONFIG)
 
-with WindowManager() as manager:
-    window = (
-        Window(
-            "",
-            InputField(
-                "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                multiline=True,
-            ),
-            "",
-            Container(
-                "In development:",
-                InputField("- archive"),
-                box="EMPTY_VERTICAL",
-            ),
-            "",
-            [
-                "Convert",
-                lambda *_: call(
-                    ["python", ADB_SYNC_SCRIPT_PATH],
-                ),
-            ],
-            width=60,
-            box="DOUBLE",
+def run_tui() -> None:
+
+    sync = SyncManager()
+    db = sync.prepare_local_db()
+
+    def get_choose_currency_window(manager: WindowManager) -> Window:
+        # FIXME: hardcode
+        base_currency = 'USD'
+        window = Window()
+
+        currency_window = (
+            window
+            + ""
+            + Button(base_currency, lambda *_: start_convert(base_currency))
+            + ""
+            + Button('Back', lambda *_: manager.remove(window))
+        ).center()
+
+        return currency_window
+
+    def get_choose_account_archive_window(manager: WindowManager) -> Window:
+        # FIXME: when you select several accounts, only the last one clicked is archived.
+
+        con = lite.connect(db)
+
+        account_table = Container()
+
+        for account in get_account_list(con):
+            account_name = account[0]
+            acc = Button(
+                account_name,
+                partial(archive_account, account_name=account_name),
+            )
+            account_table += acc
+
+        window = Window(box="HEAVY")
+
+        archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
+
+        return archive_window
+
+    def start_convert(base_currency: str) -> None:
+        import bluecoins_cli.cli as cli
+
+        cli._convert(base_currency, db)
+
+    def archive_account(button: Button, account_name: str) -> None:
+        import bluecoins_cli.cli as cli
+
+        cli._archive(account_name, db)
+
+    def close_session() -> None:
+        sync.push_changes_to_app('.ui.activities.main.MainActivity')
+        sys.exit(0)
+
+    with YamlLoader() as loader:
+        loader.load(PYTERMGUI_CONFIG)
+
+    with WindowManager() as manager:
+        main_window = Window(width=60, box="DOUBLE")
+
+        window = (
+            (
+                main_window
+                + ""
+                + Label(
+                    "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                )
+                + ""
+                + Container(
+                    "In development:",
+                    Label("- archive"),
+                    box="EMPTY_VERTICAL",
+                )
+                + ""
+                + Button('Convert', lambda *_: manager.add(get_choose_currency_window(manager)))
+                + ""
+                + Button('Archive', lambda *_: manager.add(get_choose_account_archive_window(manager)))
+                + ""
+                + Button('Exit programm', lambda *_: close_session())
+                + ""
+            )
+            .set_title("[210 bold]Bluecoins CLI")
+            .center()
         )
-        .set_title("[210 bold]Bluecoins CLI")
-        .center()
-    )
 
-    manager.add(window)
+        manager.add(window)

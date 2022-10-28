@@ -1,0 +1,99 @@
+@startuml
+
+
+interface Main {
+    DBManagment
+    --
+    == CLI buttons ==
+    convert
+    ..
+    archive
+    --
+    exit programm 
+    (+ actions button "reset")
+}
+
+package "DB.managment.interface"{
+
+class Actions << (A,LightBlue) >>{
+    .. buttons ..
+    push
+    pull
+    reset
+}
+
+note right of Actions::push
+    1. fresh remote
+    2. app disabled
+    3. local is dirty
+end note
+
+note right of Actions::reset
+    (not fs!)
+    keep local history
+    for backups
+end note
+
+class StatusDB << (S,LightBlue) >>{
+    last modified
+    .. status ..
+    remote
+    local
+    .. format ..
+    path
+    linux-format date
+}
+
+StatusDB::remote . Actions::push
+StatusDB::local . Actions::pull
+}
+
+skinparam titleFontSize 14
+title
+Available pull/push buttons
+local DB - l
+remore DB - r
+| timestamp | enable buttons + reset |
+| not l&r | ~ |
+| not l | pull |
+| not r | pull |
+| l > r | push |
+| l < r | ~ |
+| l == r | ~ |
+end title
+
+
+package "CLI Commands" {
+
+interface Convert{
+    == Buttons ==
+    convert
+    ..
+    back
+}
+
+interface Archive{
+    AccountTable
+    --
+    == Buttons ==
+    archive
+    ..
+    back
+}
+
+}
+
+class AccountTable << (T,orchid) >> {
+    == Columns ==
+    + account namespace
+    + currency
+    + balance
+}
+
+Main::archive -> Archive
+Main::convert --> Convert
+AccountTable <- Archive::AccountTable
+DB.managment.interface <-- Main::DBManagment
+
+' Convert::back ..o Main
+@enduml

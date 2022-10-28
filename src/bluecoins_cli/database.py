@@ -75,6 +75,13 @@ def find_account(conn: Connection, account_name: str) -> Any:
     return account.fetchone()
 
 
+def get_account_list(conn: Connection) -> list[Any]:
+    account = conn.cursor().execute(
+        'SELECT accountName, accountConversionRateNew FROM ACCOUNTSTABLE',
+    )
+    return account.fetchall()
+
+
 def find_account_transactions_id(conn: Connection, account_id: int) -> Cursor:
     return conn.execute(
         'SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE accountID = ?',
