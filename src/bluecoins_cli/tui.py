@@ -33,11 +33,61 @@ config:
             corner: '96'
 """
 
-sync = SyncManager()
-DB = sync.prepare_local_db()
-
 
 def run_tui() -> None:
+
+    sync = SyncManager()
+    db = sync.prepare_local_db()
+
+    def get_choose_currency_window(manager: WindowManager) -> Window:
+        # FIXME: hardcode
+        base_currency = 'USD'
+        window = Window()
+
+        currency_window = (
+            window
+            + ""
+            + Button(base_currency, lambda *_: start_convert(base_currency))
+            + ""
+            + Button('Back', lambda *_: manager.remove(window))
+        ).center()
+
+        return currency_window
+
+    def get_choose_account_archive_window(manager: WindowManager) -> Window:
+        # FIXME: when you select several accounts, only the last one clicked is archived.
+
+        con = lite.connect(db)
+
+        account_table = Container()
+
+        for account in get_account_list(con):
+            account_name = account[0]
+            acc = Button(
+                account_name,
+                partial(archive_account, account_name=account_name),
+            )
+            account_table += acc
+
+        window = Window(box="HEAVY")
+
+        archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
+
+        return archive_window
+
+    def start_convert(base_currency: str) -> None:
+        import bluecoins_cli.cli as cli
+
+        cli._convert(base_currency, db)
+
+    def archive_account(button: Button, account_name: str) -> None:
+        import bluecoins_cli.cli as cli
+
+        cli._archive(account_name, db)
+
+    def close_session() -> None:
+        sync.push_changes_to_app('.ui.activities.main.MainActivity')
+        sys.exit(0)
 
     with YamlLoader() as loader:
         loader.load(PYTERMGUI_CONFIG)
@@ -71,58 +121,3 @@ def run_tui() -> None:
         )
 
         manager.add(window)
-
-
-def get_choose_currency_window(manager: WindowManager) -> Window:
-    # FIXME: hardcode
-    base_currency = 'USD'
-    window = Window()
-
-    currency_window = (
-        window
-        + ""
-        + Button(base_currency, lambda *_: start_convert(base_currency))
-        + ""
-        + Button('Back', lambda *_: manager.remove(window))
-    ).center()
-
-    return currency_window
-
-
-def get_choose_account_archive_window(manager: WindowManager) -> Window:
-    # FIXME: hardcode
-    path_test = '/home/larnaa/VScode_project/bluecoins-cli/Bluecoins_last_3.fydb'
-    con = lite.connect(path_test)
-
-    account_table = Container()
-
-    for account in get_account_list(con):
-        account_name = account[0]
-        acc = Button(
-            account_name,
-            partial(archive_account, account_name=account_name),
-        )
-        account_table += acc
-
-    window = Window(box="HEAVY")
-
-    archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
-
-    return archive_window
-
-
-def start_convert(base_currency: str) -> None:
-    import bluecoins_cli.cli as cli
-
-    cli._convert(base_currency, DB)
-
-
-def archive_account(button, account_name: str) -> None:
-    import bluecoins_cli.cli as cli
-
-    cli._archive(account_name, DB)
-
-
-def close_session() -> None:
-    sync.push_changes_to_app('.ui.activities.main.MainActivity')
-    sys.exit(0)
