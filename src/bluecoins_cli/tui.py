@@ -40,6 +40,8 @@ def run_tui() -> None:
     db = sync.prepare_local_db()
 
     def get_choose_currency_window(manager: WindowManager) -> Window:
+        """Create the window to choose a currency and start convert."""
+
         # FIXME: hardcode
         base_currency = 'USD'
         window = Window()
@@ -55,6 +57,11 @@ def run_tui() -> None:
         return currency_window
 
     def get_choose_account_archive_window(manager: WindowManager) -> Window:
+        """Create the window to choose an account by name and start archive.
+
+        Create an account info table.
+        """
+
         # FIXME: when you select several accounts, only the last one clicked is archived.
 
         con = lite.connect(db)
@@ -65,7 +72,7 @@ def run_tui() -> None:
             account_name = account[0]
             acc = Button(
                 account_name,
-                partial(archive_account, account_name=account_name),
+                partial(start_archive_account, account_name=account_name),
             )
             account_table += acc
 
@@ -80,12 +87,19 @@ def run_tui() -> None:
 
         cli._convert(base_currency, db)
 
-    def archive_account(button: Button, account_name: str) -> None:
+    def start_archive_account(button: Button, account_name: str) -> None:
         import bluecoins_cli.cli as cli
 
         cli._archive(account_name, db)
 
     def close_session() -> None:
+        """Run app activity:
+                default: opening an app on the phone
+
+        Close terminal interface.
+        """
+
+        # FIXME: hardcode
         sync.push_changes_to_app('.ui.activities.main.MainActivity')
         sys.exit(0)
 
@@ -93,6 +107,8 @@ def run_tui() -> None:
         loader.load(PYTERMGUI_CONFIG)
 
     with WindowManager() as manager:
+        """Create the generic main aplication window."""
+
         main_window = Window(width=60, box="DOUBLE")
 
         window = (

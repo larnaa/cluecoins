@@ -1,3 +1,5 @@
+"""A module that manages the application and the Bluecoins DB on the Device using ADB."""
+
 import datetime
 import subprocess
 
@@ -18,6 +20,8 @@ class Device:
 
     @classmethod
     def connect(cls) -> 'Device':
+        """Connect to the Device with ADB"""
+
         device_list = adb.device_list()
 
         if not device_list:

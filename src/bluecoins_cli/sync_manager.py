@@ -4,11 +4,12 @@ from bluecoins_cli.adb import generate_new_db_name
 
 class SyncManager:
     """
-    1. create empty db with new name
-    2. pull db
-    3. push db
-    4. clone db
-    5. track db state
+    Class functions:
+        1. create empty db with new name
+        2. pull db
+        3. push db
+        4. clone db
+        5. track db state
     """
 
     def __init__(self) -> None:

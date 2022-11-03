@@ -1,6 +1,4 @@
 @startuml
-
-
 interface Main {
     DBManagment
     --
@@ -94,6 +92,4 @@ Main::archive -> Archive
 Main::convert --> Convert
 AccountTable <- Archive::AccountTable
 DB.managment.interface <-- Main::DBManagment
-
-' Convert::back ..o Main
 @enduml
