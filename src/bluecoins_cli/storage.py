@@ -12,6 +12,8 @@ from bluecoins_cli import database as db
 
 
 class Storage:
+    """Create and managing the local SQLite database."""
+
     def __init__(self) -> None:
         self._path = Path(xdg.xdg_data_home()) / 'bluecoins-cli' / 'bluecoins-cli.db'
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,6 +48,8 @@ class Storage:
 
 
 class BluecoinsStorage:
+    """Managing the Bluecoins database"""
+
     def __init__(self, conn: Connection) -> None:
         self.conn = conn
 

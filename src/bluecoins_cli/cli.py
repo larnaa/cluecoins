@@ -39,6 +39,8 @@ def root(
 @click.argument('path', type=click.Path(exists=True))
 @click.pass_context
 def cli(ctx: click.Context, path: str) -> None:
+    """Manual path database selection."""
+
     ctx.obj = {}
     ctx.obj['path'] = path
 
@@ -58,6 +60,8 @@ def convert(
     ctx: click.Context,
     base_currency: str,
 ) -> None:
+    """Convert with CLI (manual DB selection)."""
+
     _convert(base_currency, ctx.obj['path'])
 
 
@@ -100,6 +104,8 @@ def archive(
     ctx: click.Context,
     account_name: str,
 ) -> None:
+    """Archive with CLI (manual DB selection)."""
+
     _archive(account_name, ctx.obj['path'])
 
 

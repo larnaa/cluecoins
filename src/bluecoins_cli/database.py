@@ -1,3 +1,5 @@
+"""Module with queries to the Bluecoins database."""
+
 import shutil
 from contextlib import contextmanager
 from datetime import datetime
