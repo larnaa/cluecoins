@@ -5,20 +5,20 @@ from decimal import Decimal
 
 import click
 
-from bluecoins_cli.cache import QuoteCache
-from bluecoins_cli.database import delete_account
-from bluecoins_cli.database import get_base_currency
-from bluecoins_cli.database import iter_accounts
-from bluecoins_cli.database import iter_transactions
-from bluecoins_cli.database import move_transactions_to_account
-from bluecoins_cli.database import open_copy
-from bluecoins_cli.database import set_base_currency
-from bluecoins_cli.database import transaction
-from bluecoins_cli.database import update_account
-from bluecoins_cli.database import update_transaction
-from bluecoins_cli.storage import BluecoinsStorage
-from bluecoins_cli.storage import Storage
-from bluecoins_cli.tui import run_tui
+from cluecoins.cache import QuoteCache
+from cluecoins.database import delete_account
+from cluecoins.database import get_base_currency
+from cluecoins.database import iter_accounts
+from cluecoins.database import iter_transactions
+from cluecoins.database import move_transactions_to_account
+from cluecoins.database import open_copy
+from cluecoins.database import set_base_currency
+from cluecoins.database import transaction
+from cluecoins.database import update_account
+from cluecoins.database import update_transaction
+from cluecoins.storage import BluecoinsStorage
+from cluecoins.storage import Storage
+from cluecoins.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
 

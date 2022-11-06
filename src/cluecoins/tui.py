@@ -9,8 +9,8 @@ from pytermgui.widgets.containers import Container
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-from bluecoins_cli.database import get_account_list
-from bluecoins_cli.sync_manager import SyncManager
+from cluecoins.database import get_account_list
+from cluecoins.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
 config:
@@ -83,12 +83,12 @@ def run_tui() -> None:
         return archive_window
 
     def start_convert(base_currency: str) -> None:
-        import bluecoins_cli.cli as cli
+        import cluecoins.cli as cli
 
         cli._convert(base_currency, db)
 
     def start_archive_account(button: Button, account_name: str) -> None:
-        import bluecoins_cli.cli as cli
+        import cluecoins.cli as cli
 
         cli._archive(account_name, db)
 
