@@ -12,7 +12,7 @@ A tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/), a f
 
 ## Installation
 
-Cluecoins is not released yet.
+Cluecoins is not released yet. You need to build it from sources.
 
 To manage development environment you need GNU Make and [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) installed.  
 Run `poetry build` to make a Python wheel package. Run `make` to run an entire CI pipeline: install dependencies, run linters and tests.
