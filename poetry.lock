@@ -1,6 +1,10 @@
 [[package]]
 name = "adbutils"
+<<<<<<< HEAD
 version = "1.0.10"
+=======
+version = "1.0.9"
+>>>>>>> 363411d (rename project name +)
 description = "Pure Python Adb Library"
 category = "main"
 optional = false
@@ -703,11 +707,19 @@ content-hash = "902c8bc5a56be0cce0493d46d4d50941336adf66f9ae2d6f4ecd22c9bc53e8e8
 
 [metadata.files]
 adbutils = [
+<<<<<<< HEAD
     {file = "adbutils-1.0.10-py3-none-macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:ef82bb0e7a394f5bce184b2bf472ba5f37422599639ba8e4a5d7bc2718d03689"},
     {file = "adbutils-1.0.10-py3-none-manylinux1_x86_64.whl", hash = "sha256:6989825b4062dfbf8dcb0e6e2456efc9371a7fa2f539339a4a68e84edff0ace6"},
     {file = "adbutils-1.0.10-py3-none-win32.whl", hash = "sha256:02184837723a06678170de14bf4a8e9f4a3705afef56190f38a0eddc76b63032"},
     {file = "adbutils-1.0.10-py3-none-win_amd64.whl", hash = "sha256:0645d51ea25efb3bccb46a73560e97afe8474b91b4e25355ec39409ae26b1892"},
     {file = "adbutils-1.0.10.tar.gz", hash = "sha256:f6b2a1f12a1c2d18be697d8ed20305db8138da721d3eadcdfc1d42f35335454a"},
+=======
+    {file = "adbutils-1.0.9-py3-none-macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:5020232880edc6fda9738771274240897cc6f3d86cd8c0702f1e37c7458a21bf"},
+    {file = "adbutils-1.0.9-py3-none-manylinux1_x86_64.whl", hash = "sha256:a9dcd72e942eddaef098efbdb3757d3f150e42a0a66d8cb67a7f46b82c96f684"},
+    {file = "adbutils-1.0.9-py3-none-win32.whl", hash = "sha256:1cd170c5474a623df5677409b54966bb27c9906b01119018493b3cf021bc69db"},
+    {file = "adbutils-1.0.9-py3-none-win_amd64.whl", hash = "sha256:4d454b8c79fb995ded1ed92ff266814b6df8bbd1b778155ec623484503dde514"},
+    {file = "adbutils-1.0.9.tar.gz", hash = "sha256:7070a536e96a4a36517e02838707db5823f0cde94ba26c9809be865c6a692153"},
+>>>>>>> 363411d (rename project name +)
 ]
 apkutils2 = [
     {file = "apkutils2-1.0.0.tar.gz", hash = "sha256:c5ae8f86d3ebee6a59fc014d88507741d7f3f9ab183bab34b44d011fe878660b"},
@@ -1031,6 +1043,9 @@ Pillow = [
     {file = "Pillow-9.3.0-pp38-pypy38_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:0b07fffc13f474264c336298d1b4ce01d9c5a011415b79d4ee5527bb69ae6f65"},
     {file = "Pillow-9.3.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:073adb2ae23431d3b9bcbcff3fe698b62ed47211d0716b067385538a1b0f28b8"},
     {file = "Pillow-9.3.0.tar.gz", hash = "sha256:c935a22a557a560108d780f9a0fc426dd7459940dc54faa49d83249c8d3e760f"},
+]
+plantuml = [
+    {file = "plantuml-0.3.0-py3-none-any.whl", hash = "sha256:f21789bc4abc3e8888d23a8fa010e942989f1a73d6e50e10a54688cbee52aa1c"},
 ]
 plantuml = [
     {file = "plantuml-0.3.0-py3-none-any.whl", hash = "sha256:f21789bc4abc3e8888d23a8fa010e942989f1a73d6e50e10a54688cbee52aa1c"},
