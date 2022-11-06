@@ -1,5 +1,5 @@
-from bluecoins_cli.adb import Device
-from bluecoins_cli.adb import generate_new_db_name
+from cluecoins.adb import Device
+from cluecoins.adb import generate_new_db_name
 
 
 class SyncManager:

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import requests
 
-from bluecoins_cli.storage import Storage
+from cluecoins.storage import Storage
 
 
 class QuoteCache:

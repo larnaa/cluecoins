@@ -1,8 +1,8 @@
 import unittest
 
-import bluecoins_cli
+import cluecoins
 
 
 class EmptyTest(unittest.TestCase):
     def test_empty(self) -> None:
-        bluecoins_cli
+        cluecoins

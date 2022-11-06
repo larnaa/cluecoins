@@ -11,7 +11,7 @@ APP_ID = 'com.rammigsoftware.bluecoins'
 
 def generate_new_db_name() -> str:
     current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    return f"bluecoins-{current_time}"
+    return f"cluecoins-{current_time}"
 
 
 class Device:

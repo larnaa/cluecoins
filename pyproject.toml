@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "bluecoins-cli"
+name = "cluecoins"
 version = "0.0.0"
 description = "A CLI tool to manage the database of Bluecoins, an awesome budget planner for Android"
 license = "MIT"
@@ -8,11 +8,11 @@ authors = [
 ]
 
 packages = [
-    { include = "bluecoins_cli", from = "src" },
+    { include = "cluecoins", from = "src" },
 ]
 
 [tool.poetry.scripts]
-bluecoins-cli = 'bluecoins_cli.cli:root'
+cluecoins = 'cluecoins.cli:root'
 
 
 [tool.poetry.dependencies]
@@ -39,6 +39,9 @@ pytest-asyncio = "^0.18.3"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
 pytermgui = "^7.2.0"
+adbutils = "^1.0.9"
+plantuml = "^0.3.0"
+PyYAML = "^6.0"
 
 [tool.isort]
 line_length = 120

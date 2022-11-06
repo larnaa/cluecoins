@@ -8,7 +8,7 @@ from typing import Optional
 
 import xdg
 
-from bluecoins_cli import database as db
+from cluecoins import database as db
 
 
 class Storage:
