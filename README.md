@@ -31,5 +31,5 @@ Perform operations on that file with `cluecoins db <filename> <command>`. For ex
 
 1. Open the Bluecoins app. Go to *Settings -> Data Management -> Phone Storage -> Backup to phone storage*.
 2. Transfer created `*.fydb` database backup file to the PC.
-3. After performing operations on that file transfer created it to the smartphone. Go to *Settings -> Data Management -> Phone Storage -> Restore from phone storage*. Choose created file.
+3. After performing operations on that file transfer it to the smartphone. Go to *Settings -> Data Management -> Phone Storage -> Restore from phone storage*. Choose created file.
 
