@@ -6,7 +6,7 @@ on:
       - '**'
 
 jobs:
-  build:
+  Explore-GitHub-Actions:
     name: Build
     runs-on: ubuntu-latest
       matrix:
