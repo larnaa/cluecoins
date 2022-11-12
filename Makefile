@@ -25,7 +25,7 @@ mypy:
 	poetry run mypy src tests --strict
 
 test:
-	poetry run pytest --cov-report=term-missing --cov=bluecoins_cli --cov-report=xml -n auto --dist loadscope -s -v tests
+	poetry run pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests
 
 cover:
 	poetry run diff-cover --compare-branch=master coverage.xml
