@@ -6,7 +6,7 @@ CREATE TABLE ITEMTABLE(
     itemAutoFillVisibility INTEGER
 );
 
-CREATE TABLE sqlite_sequence(name, seq);
+CREATE TABLE sqlite_sequence(name, seq);sqlite3 connection commit
 
 CREATE TABLE CHILDCATEGORYTABLE(
     categoryTableID INTEGER PRIMARY KEY AUTOINCREMENT,
