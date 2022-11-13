@@ -1,11 +1,6 @@
-import sqlite3
 from datetime import datetime
 from decimal import Decimal
-from pathlib import Path
 from sqlite3 import Connection
-from typing import Iterable
-
-import pytest
 
 from cluecoins.database import add_label_to_transaction
 from cluecoins.database import create_new_account
@@ -20,19 +15,6 @@ from cluecoins.database import move_transactions_to_account
 from cluecoins.database import set_base_currency
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
-
-
-@pytest.fixture
-def create_memory_db() -> Iterable[Connection]:
-    """Fixture to set up the in-memory database with test data"""
-
-    conn = sqlite3.connect(':memory:')
-
-    path = Path(__file__).parent / 'test_data.sql'
-    sql = path.read_text()
-    conn.executescript(sql)
-
-    yield conn
 
 
 def test_set_base_currency(create_memory_db: Connection) -> None:
