@@ -57,6 +57,7 @@ def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
         'SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;'
     ):
         id_, currency, rate = row
+        # FIXME: hardcode
         currency = currency.replace('USDT', 'USD')
         rate = Decimal(str(rate))
         yield id_, currency, rate
