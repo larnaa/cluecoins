@@ -52,13 +52,14 @@ def update_transaction(conn: Connection, id_: int, rate: Decimal, amount: Decima
     )
 
 
-def iter_accounts(conn: Connection) -> Iterator[tuple[int, str, Decimal]]:
+def iter_accounts(
+    conn: Connection, old_currency: str = 'USDT', new_currency: str = 'USD'
+) -> Iterator[tuple[int, str, Decimal]]:
     for row in conn.cursor().execute(
         'SELECT accountsTableID, accountCurrency, accountConversionRateNew FROM ACCOUNTSTABLE;'
     ):
         id_, currency, rate = row
-        # FIXME: hardcode
-        currency = currency.replace('USDT', 'USD')
+        currency = currency.replace(old_currency, new_currency)
         rate = Decimal(str(rate))
         yield id_, currency, rate
 
