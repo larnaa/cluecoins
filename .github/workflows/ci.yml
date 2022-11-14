@@ -7,8 +7,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
       - name: poetry
+        run: poetry install
+
+      - name: venv
         run: poetry shell
       - name: Makefile
         run: make
