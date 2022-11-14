@@ -15,12 +15,12 @@ class Storage:
     """Create and managing the local SQLite database."""
 
     def __init__(self) -> None:
-        self._path = Path(xdg.xdg_data_home()) / 'bluecoins-cli' / 'bluecoins-cli.db'
+        self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
         self._db = connect(self._path)
 
-    def init(self) -> None:
+    def create_table_quote(self) -> None:
         self._db.execute(
             'CREATE TABLE IF NOT EXISTS quotes (date TEXT, base_currency TEXT, quote_currency TEXT, price REAL)'
         )
