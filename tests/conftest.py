@@ -7,7 +7,7 @@ import pytest
 
 
 @pytest.fixture
-def create_memory_db() -> Iterable[Connection]:
+def conn() -> Iterable[Connection]:
     """Fixture to set up the in-memory database with test data"""
 
     conn = sqlite3.connect(':memory:')
