@@ -18,9 +18,10 @@ class Storage:
         self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
+        # FIXME: put in a separate function
         self._db = connect(self._path)
 
-    def create_table_quote(self) -> None:
+    def create_quote_table(self) -> None:
         self._db.execute(
             'CREATE TABLE IF NOT EXISTS quotes (date TEXT, base_currency TEXT, quote_currency TEXT, price REAL)'
         )
