@@ -27,8 +27,8 @@ mypy:
 test:
 	poetry run pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests
 
-cover:
-	poetry run diff-cover --compare-branch=master coverage.xml
+#cover:
+#	poetry run diff-cover --compare-branch=master coverage.xml
 
 build:
 	poetry build
