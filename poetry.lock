@@ -192,11 +192,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "exceptiongroup"
-<<<<<<< HEAD
 version = "1.0.3"
-=======
-version = "1.0.2"
->>>>>>> a60a21c (update poetry)
 description = "Backport of PEP 654 (exception groups)"
 category = "dev"
 optional = false
