@@ -70,7 +70,7 @@ def _convert(base_currency: str, db_path: str) -> None:
     conn = open_copy(db_path)
 
     storage = Storage()
-    storage.init()
+    storage.create_quote_table()
     cache = QuoteCache(storage)
 
     with transaction(conn) as conn:
