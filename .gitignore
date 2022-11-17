@@ -154,3 +154,4 @@ secrets.env
 *.sqlite3
 
 *.tmp.md
+*.orig
