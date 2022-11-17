@@ -1,11 +1,6 @@
 name: GitHub Actions Demo
 on:
-  push:
-    paths:
-      - 'src/**'
-      - 'pyproject.toml'
-      - 'poetry.lock'
-      - '.github/workflows/ci.yml'
+  push
 
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 jobs:
