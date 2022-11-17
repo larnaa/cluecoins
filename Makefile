@@ -5,7 +5,7 @@
 DEV=1
 TAG=latest
 
-all: install lint test 
+all: install lint test cover
 lint: isort black flake mypy
 
 install:
@@ -27,8 +27,8 @@ mypy:
 test:
 	poetry run pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests
 
-#cover:
-#	poetry run diff-cover --compare-branch=master coverage.xml
+cover:
+	poetry run diff-cover --compare-branch=master coverage.xml 
 
 build:
 	poetry build
