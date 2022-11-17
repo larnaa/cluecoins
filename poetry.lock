@@ -500,8 +500,8 @@ python-versions = ">=3.6.8"
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
-name = "pytermgui"
-version = "7.2.0"
+name = "PyTermGUI"
+version = "7.3.0"
 description = "Python TUI framework with mouse support, modular widget system, customizable and rapid terminal markup language and more!"
 category = "dev"
 optional = false
@@ -634,7 +634,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "types-requests"
-version = "2.28.11.4"
+version = "2.28.11.5"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
@@ -645,7 +645,7 @@ types-urllib3 = "<1.27"
 
 [[package]]
 name = "types-urllib3"
-version = "1.26.25.3"
+version = "1.26.25.4"
 description = "Typing stubs for urllib3"
 category = "dev"
 optional = false
@@ -1067,9 +1067,9 @@ pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
-pytermgui = [
-    {file = "pytermgui-7.2.0-py3-none-any.whl", hash = "sha256:1d6856b10705793e17bc0527cc04da4cdeb00b6ca79437f1a43cfe56b9c46cf8"},
-    {file = "pytermgui-7.2.0.tar.gz", hash = "sha256:bec500e07b76456980b9e28994523b273e17dd70d923a0767e76ff7f7f2ce5f7"},
+PyTermGUI = [
+    {file = "pytermgui-7.3.0-py3-none-any.whl", hash = "sha256:a08e525c6bd7fe74bb3d0910bd37bd2b9eb6dbb98667f807cce2cd02eb8e9525"},
+    {file = "pytermgui-7.3.0.tar.gz", hash = "sha256:3a6211e872fae6b6a6445efff2260266f33d288a7ec64411238a673a23f333af"},
 ]
 pytest = [
     {file = "pytest-7.2.0-py3-none-any.whl", hash = "sha256:892f933d339f068883b6fd5a459f03d85bfcb355e4981e146d2c7616c21fef71"},
@@ -1146,12 +1146,12 @@ tomli = [
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 types-requests = [
-    {file = "types-requests-2.28.11.4.tar.gz", hash = "sha256:d4f342b0df432262e9e326d17638eeae96a5881e78e7a6aae46d33870d73952e"},
-    {file = "types_requests-2.28.11.4-py3-none-any.whl", hash = "sha256:bdb1f9811e53d0642c8347b09137363eb25e1a516819e190da187c29595a1df3"},
+    {file = "types-requests-2.28.11.5.tar.gz", hash = "sha256:a7df37cc6fb6187a84097da951f8e21d335448aa2501a6b0a39cbd1d7ca9ee2a"},
+    {file = "types_requests-2.28.11.5-py3-none-any.whl", hash = "sha256:091d4a5a33c1b4f20d8b1b952aa8fa27a6e767c44c3cf65e56580df0b05fd8a9"},
 ]
 types-urllib3 = [
-    {file = "types-urllib3-1.26.25.3.tar.gz", hash = "sha256:1807b87b8ee1ae0226813ba2c52330eff20fb2bf6359b1de24df08eb3090e442"},
-    {file = "types_urllib3-1.26.25.3-py3-none-any.whl", hash = "sha256:a188c24fc61a99658c8c324c8dd7419f5b91a0d89df004e5f576869122c1db55"},
+    {file = "types-urllib3-1.26.25.4.tar.gz", hash = "sha256:eec5556428eec862b1ac578fb69aab3877995a99ffec9e5a12cf7fbd0cc9daee"},
+    {file = "types_urllib3-1.26.25.4-py3-none-any.whl", hash = "sha256:ed6b9e8a8be488796f72306889a06a3fc3cb1aa99af02ab8afb50144d7317e49"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},
