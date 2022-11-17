@@ -22,5 +22,3 @@ jobs:
 
       - name: Makefile
         run: make
-
-      - run: echo "🍏 This job's status is ${{ job.status }}."
