@@ -15,9 +15,6 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-
       - name: Makefile
         run: make
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
