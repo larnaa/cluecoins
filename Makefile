@@ -5,7 +5,7 @@
 DEV=1
 TAG=latest
 
-all: install lint test cover
+all: install lint test #cover
 lint: isort black flake mypy
 
 install:
