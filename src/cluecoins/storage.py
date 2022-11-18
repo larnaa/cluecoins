@@ -15,11 +15,14 @@ class Storage:
     """Create and managing the local SQLite database."""
 
     def __init__(self) -> None:
+        """Create file with temorary database"""
+
         self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
-        # FIXME: put in a separate function
-        self._db = connect(self._path)
+
+    def connect_to_database(self) -> Connection:
+        self._db = connect(self._path) 
 
     def create_quote_table(self) -> None:
         self._db.execute(
