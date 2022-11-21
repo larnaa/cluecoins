@@ -20,9 +20,11 @@ class Storage:
         self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
+        self._db = self.connect_to_database()
 
     def connect_to_database(self) -> Connection:
-        self._db = connect(self._path) 
+        conn = connect(self._path)
+        return conn
 
     def create_quote_table(self) -> None:
         self._db.execute(
