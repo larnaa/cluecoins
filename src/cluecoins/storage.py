@@ -16,27 +16,32 @@ class Storage:
 
     def __init__(self) -> None:
         """Create file with temorary database"""
-
         self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.touch(exist_ok=True)
-        self._db = self.connect_to_database()
+        self._db: Optional[Connection] = None
+
+    @property
+    def db(self) -> Connection:
+        if self._db is None:
+            self._db = self.connect_to_database()
+        return self._db
 
     def connect_to_database(self) -> Connection:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._path.touch(exist_ok=True)
         conn = connect(self._path)
         return conn
 
     def create_quote_table(self) -> None:
-        self._db.execute(
+        self.db.execute(
             'CREATE TABLE IF NOT EXISTS quotes (date TEXT, base_currency TEXT, quote_currency TEXT, price REAL)'
         )
 
     def commit(self) -> None:
-        self._db.commit()
+        self.db.commit()
 
     def get_quote(self, date: datetime, base_currency: str, quote_currency: str) -> Optional[Decimal]:
         date = datetime.strptime(datetime.strftime(date, '%Y-%m-%d'), '%Y-%m-%d')
-        res = self._db.execute(
+        res = self.db.execute(
             'SELECT price FROM quotes WHERE date = ? AND base_currency = ? AND quote_currency = ?',
             (date, base_currency, quote_currency),
         ).fetchone()
@@ -47,7 +52,7 @@ class Storage:
     def add_quote(self, date: datetime, base_currency: str, quote_currency: str, price: Decimal) -> None:
         date = datetime.strptime(datetime.strftime(date, '%Y-%m-%d'), '%Y-%m-%d')
         if not self.get_quote(date, base_currency, quote_currency):
-            self._db.execute(
+            self.db.execute(
                 'INSERT INTO quotes (date, base_currency, quote_currency, price) VALUES (?, ?, ?, ?)',
                 (date, base_currency, quote_currency, str(price)),
             )
