@@ -2,8 +2,10 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import click
+import xdg
 
 from cluecoins.cache import QuoteCache
 from cluecoins.database import delete_account
@@ -69,7 +71,7 @@ def _convert(base_currency: str, db_path: str) -> None:
 
     conn = open_copy(db_path)
 
-    storage = Storage()
+    storage = Storage(Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db')
     storage.create_quote_table()
     cache = QuoteCache(storage)
 

@@ -6,17 +6,15 @@ from sqlite3 import connect
 from typing import Any
 from typing import Optional
 
-import xdg
-
 from cluecoins import database as db
 
 
 class Storage:
     """Create and managing the local SQLite database."""
 
-    def __init__(self) -> None:
+    def __init__(self, path_database: Path) -> None:
         """Create file with temorary database"""
-        self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
+        self._path = path_database
         self._db: Optional[Connection] = None
 
     @property
