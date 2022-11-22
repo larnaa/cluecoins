@@ -10,11 +10,10 @@ from cluecoins.storage import Storage
 
 @pytest.fixture
 def initialization_storage(tmp_path: Path) -> Iterable[Storage]:
-    """Fixture to set up the temporary database and"""
+    """Fixture to set up the temporary local database"""
 
-    path_dir = tmp_path / 'cluecoins' 
-    path = path_dir / 'cluecoins.db'
-    storage = Storage(path)
+    path_db = tmp_path / 'cluecoins' / 'cluecoins.db'
+    storage = Storage(path_db)
     storage.create_quote_table()
 
     yield storage
@@ -22,7 +21,7 @@ def initialization_storage(tmp_path: Path) -> Iterable[Storage]:
 
 @pytest.fixture
 def conn() -> Iterable[Connection]:
-    """Fixture to set up the in-memory database with test data"""
+    """Fixture to set up the in-memory Bluecoins database with test data"""
 
     conn = sqlite3.connect(':memory:')
 

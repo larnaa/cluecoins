@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from sqlite3 import Connection
 from sqlite3 import OperationalError
-from typing import TypedDict
+from typing import Any
+from typing import Dict
 
 import pytest
 
@@ -19,17 +20,11 @@ def test_create_database(initialization_storage: Storage) -> None:
             'SELECT * FROM quotes;',
         )
     except OperationalError:
-        raise pytest.fail('Table not exists')
+        raise pytest.fail('Table is not exists')
 
 
 def test_add_quote(initialization_storage: Storage) -> None:
-    class QuoteDict(TypedDict):
-        date: datetime
-        base_currency: str
-        quote_currency: str
-        price: Decimal
-
-    quote_dict: QuoteDict = {
+    quote_dict: Dict[str, Any] = {
         'date': datetime(2022, 7, 15),
         'base_currency': 'USDT',
         'quote_currency': 'USD',
@@ -49,13 +44,7 @@ def test_add_quote(initialization_storage: Storage) -> None:
 
 
 def test_get_quote(initialization_storage: Storage) -> None:
-    class QuoteDict(TypedDict):
-        date: datetime
-        base_currency: str
-        quote_currency: str
-        price: Decimal
-
-    quote_data: QuoteDict = {
+    quote_data: Dict[str, Any] = {
         'date': datetime(2022, 7, 15),
         'base_currency': 'USDT',
         'quote_currency': 'USD',
