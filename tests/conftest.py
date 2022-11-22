@@ -5,6 +5,20 @@ from typing import Iterable
 
 import pytest
 
+from cluecoins.storage import Storage
+
+
+@pytest.fixture
+def initialization_storage(tmp_path: Path) -> Iterable[Storage]:
+    """Fixture to set up the temporary database and"""
+
+    path_dir = tmp_path / 'cluecoins' 
+    path = path_dir / 'cluecoins.db'
+    storage = Storage(path)
+    storage.create_quote_table()
+
+    yield storage
+
 
 @pytest.fixture
 def conn() -> Iterable[Connection]:
