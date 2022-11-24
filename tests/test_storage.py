@@ -1,6 +1,65 @@
+from datetime import datetime
+from decimal import Decimal
 from sqlite3 import Connection
+from sqlite3 import OperationalError
+from typing import Any
+from typing import Dict
+
+import pytest
 
 from cluecoins.storage import BluecoinsStorage
+from cluecoins.storage import Storage
+
+
+def test_create_database(initialization_storage: Storage) -> None:
+
+    try:
+        conn = initialization_storage.db
+
+        conn.cursor().execute(
+            'SELECT * FROM quotes;',
+        )
+    except OperationalError:
+        raise pytest.fail('Table does not exist')
+
+
+def test_add_quote(initialization_storage: Storage) -> None:
+    quote_test_data: Dict[str, Any] = {
+        'date': datetime(2022, 7, 15),
+        'base_currency': 'USDT',
+        'quote_currency': 'USD',
+        'price': Decimal('1230.23'),
+    }
+
+    conn = initialization_storage.db
+
+    initialization_storage.add_quote(**quote_test_data)
+
+    quote_data = conn.cursor().execute(
+        'SELECT * FROM quotes',
+    )
+    expected_quote_data = quote_data.fetchall()
+
+    assert expected_quote_data == [('2022-07-15 00:00:00', 'USDT', 'USD', 1230.23)]
+
+
+def test_get_quote(initialization_storage: Storage) -> None:
+    quote_test_data: Dict[str, Any] = {
+        'date': datetime(2022, 7, 15),
+        'base_currency': 'USDT',
+        'quote_currency': 'USD',
+        'price': Decimal('1230.23'),
+    }
+
+    initialization_storage.add_quote(**quote_test_data)
+
+    expected_quote_price = initialization_storage.get_quote(
+        date=quote_test_data['date'],
+        base_currency=quote_test_data['base_currency'],
+        quote_currency=quote_test_data['quote_currency'],
+    )
+
+    assert expected_quote_price == Decimal('1230.23')
 
 
 def test_create_account(conn: Connection) -> None:

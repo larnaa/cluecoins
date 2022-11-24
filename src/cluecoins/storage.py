@@ -6,32 +6,39 @@ from sqlite3 import connect
 from typing import Any
 from typing import Optional
 
-import xdg
-
 from cluecoins import database as db
 
 
 class Storage:
     """Create and managing the local SQLite database."""
 
-    def __init__(self) -> None:
-        self._path = Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db'
+    def __init__(self, db_path: Path) -> None:
+        """Create file with temorary database"""
+        self._path = db_path
+        self._db: Optional[Connection] = None
+
+    @property
+    def db(self) -> Connection:
+        if self._db is None:
+            self._db = self.connect_to_database()
+        return self._db
+
+    def connect_to_database(self) -> Connection:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
-        # FIXME: put in a separate function
-        self._db = connect(self._path)
+        return connect(self._path)
 
     def create_quote_table(self) -> None:
-        self._db.execute(
+        self.db.execute(
             'CREATE TABLE IF NOT EXISTS quotes (date TEXT, base_currency TEXT, quote_currency TEXT, price REAL)'
         )
 
     def commit(self) -> None:
-        self._db.commit()
+        self.db.commit()
 
     def get_quote(self, date: datetime, base_currency: str, quote_currency: str) -> Optional[Decimal]:
         date = datetime.strptime(datetime.strftime(date, '%Y-%m-%d'), '%Y-%m-%d')
-        res = self._db.execute(
+        res = self.db.execute(
             'SELECT price FROM quotes WHERE date = ? AND base_currency = ? AND quote_currency = ?',
             (date, base_currency, quote_currency),
         ).fetchone()
@@ -42,7 +49,7 @@ class Storage:
     def add_quote(self, date: datetime, base_currency: str, quote_currency: str, price: Decimal) -> None:
         date = datetime.strptime(datetime.strftime(date, '%Y-%m-%d'), '%Y-%m-%d')
         if not self.get_quote(date, base_currency, quote_currency):
-            self._db.execute(
+            self.db.execute(
                 'INSERT INTO quotes (date, base_currency, quote_currency, price) VALUES (?, ?, ?, ?)',
                 (date, base_currency, quote_currency, str(price)),
             )

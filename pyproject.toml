@@ -42,6 +42,9 @@ adbutils = "^1.0.9"
 plantuml = "^0.3.0"
 PyYAML = "^6.0"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.isort]
 line_length = 120
 force_single_line = true
