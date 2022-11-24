@@ -12,9 +12,9 @@ from cluecoins import database as db
 class Storage:
     """Create and managing the local SQLite database."""
 
-    def __init__(self, path_database: Path) -> None:
+    def __init__(self, db_path: Path) -> None:
         """Create file with temorary database"""
-        self._path = path_database
+        self._path = db_path
         self._db: Optional[Connection] = None
 
     @property
@@ -26,8 +26,7 @@ class Storage:
     def connect_to_database(self) -> Connection:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.touch(exist_ok=True)
-        conn = connect(self._path)
-        return conn
+        return connect(self._path)
 
     def create_quote_table(self) -> None:
         self.db.execute(

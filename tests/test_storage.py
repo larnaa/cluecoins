@@ -20,11 +20,11 @@ def test_create_database(initialization_storage: Storage) -> None:
             'SELECT * FROM quotes;',
         )
     except OperationalError:
-        raise pytest.fail('Table is not exists')
+        raise pytest.fail('Table does not exist')
 
 
 def test_add_quote(initialization_storage: Storage) -> None:
-    quote_dict: Dict[str, Any] = {
+    quote_test_data: Dict[str, Any] = {
         'date': datetime(2022, 7, 15),
         'base_currency': 'USDT',
         'quote_currency': 'USD',
@@ -33,7 +33,7 @@ def test_add_quote(initialization_storage: Storage) -> None:
 
     conn = initialization_storage.db
 
-    initialization_storage.add_quote(**quote_dict)
+    initialization_storage.add_quote(**quote_test_data)
 
     quote_data = conn.cursor().execute(
         'SELECT * FROM quotes',
@@ -44,17 +44,19 @@ def test_add_quote(initialization_storage: Storage) -> None:
 
 
 def test_get_quote(initialization_storage: Storage) -> None:
-    quote_data: Dict[str, Any] = {
+    quote_test_data: Dict[str, Any] = {
         'date': datetime(2022, 7, 15),
         'base_currency': 'USDT',
         'quote_currency': 'USD',
         'price': Decimal('1230.23'),
     }
 
-    initialization_storage.add_quote(**quote_data)
+    initialization_storage.add_quote(**quote_test_data)
 
     expected_quote_price = initialization_storage.get_quote(
-        date=quote_data['date'], base_currency=quote_data['base_currency'], quote_currency=quote_data['quote_currency']
+        date=quote_test_data['date'],
+        base_currency=quote_test_data['base_currency'],
+        quote_currency=quote_test_data['quote_currency'],
     )
 
     assert expected_quote_price == Decimal('1230.23')

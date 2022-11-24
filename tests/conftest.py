@@ -12,8 +12,8 @@ from cluecoins.storage import Storage
 def initialization_storage(tmp_path: Path) -> Iterable[Storage]:
     """Fixture to set up the temporary local database"""
 
-    path_db = tmp_path / 'cluecoins' / 'cluecoins.db'
-    storage = Storage(path_db)
+    db_path = tmp_path / 'cluecoins' / 'cluecoins.db'
+    storage = Storage(db_path)
     storage.create_quote_table()
 
     yield storage
