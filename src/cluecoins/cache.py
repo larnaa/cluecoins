@@ -16,6 +16,8 @@ class QuoteCache:
         base_currency: str,
         quote_currency: str,
     ) -> None:
+        """Getting quotes from the Exchangerate API and writing them to the local database"""
+
         response = requests.get(
             url='https://api.exchangerate.host/timeseries',
             params={
