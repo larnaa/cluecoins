@@ -130,3 +130,14 @@ def delete_account(conn: Connection, account_id: int) -> None:
         'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
         (account_id,),
     )
+
+
+def find_id_transactions_by_label(conn: Connection, label_name: str) -> list[Any]:
+    transactions = conn.cursor().execute(
+        'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
+        (label_name,),
+    )   
+    if transactions.fetchall() == []:
+        raise Exception("The account doesn't exist.")
+
+    return transactions.fetchall()
