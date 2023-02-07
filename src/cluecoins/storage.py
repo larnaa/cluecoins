@@ -62,8 +62,11 @@ class BluecoinsStorage:
         self.conn = conn
 
     def create_account(self, account_name: str, account_currency: str) -> None:
-        if db.find_account(self.conn, account_name) is None:
-            db.create_new_account(self.conn, account_name, account_currency)
+        try:
+            if db.find_account(self.conn, account_name) is None:
+                db.create_new_account(self.conn, account_name, account_currency)
+        except:
+            return "account exist"
 
     def get_account_id(self, account_name: str) -> int:
         account_info = db.find_account(self.conn, account_name)
