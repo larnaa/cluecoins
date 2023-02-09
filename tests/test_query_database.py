@@ -7,7 +7,7 @@ from cluecoins.database import create_new_account
 from cluecoins.database import delete_account
 from cluecoins.database import find_account
 from cluecoins.database import find_account_transactions_id
-from cluecoins.database import get_account_list
+from cluecoins.database import get_accounts_list
 from cluecoins.database import get_base_currency
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
@@ -50,7 +50,7 @@ def test_iter_accounts(conn: Connection) -> None:
 
 def test_get_account_list(conn: Connection) -> None:
 
-    account_list = get_account_list(conn)
+    account_list = get_accounts_list(conn)
     expected_len_account_list = len(account_list)
 
     assert expected_len_account_list == 10

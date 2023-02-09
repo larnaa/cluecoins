@@ -79,7 +79,7 @@ def find_account(conn: Connection, account_name: str) -> Any:
     return account.fetchone()
 
 
-def get_account_list(conn: Connection) -> list[Any]:
+def get_accounts_list(conn: Connection) -> list[Any]:
     account = conn.cursor().execute(
         'SELECT accountName, accountConversionRateNew FROM ACCOUNTSTABLE',
     )
@@ -132,6 +132,8 @@ def delete_account(conn: Connection, account_id: int) -> None:
     )
 
 
+# NOTE: Delete?
+
 def find_id_transactions_by_label(conn: Connection, label_name: str) -> list[Any]:
     transactions = conn.cursor().execute(
         'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
@@ -141,3 +143,11 @@ def find_id_transactions_by_label(conn: Connection, label_name: str) -> list[Any
         raise Exception("The account doesn't exist.")
 
     return transactions.fetchall()
+
+
+def get_archive_accounts_list(conn: Connection) -> list[Any]:
+    accounts = conn.cursor().execute(
+        "SELECT DISTINCT substr(labelName, 5) from LABELSTABLE WHERE labelName LIKE 'cli%' EXCEPT SELECT DISTINCT substr(labelName, 5) FROM LABELSTABLE WHERE labelName = 'cli_archive';"
+    )
+    return accounts.fetchall()
+
