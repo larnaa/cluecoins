@@ -18,9 +18,11 @@ from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
+from cluecoins.database import get_accounts_list
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
 from cluecoins.tui import run_tui
+from sqlite3 import Connection
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -128,7 +130,7 @@ def _archive(
         # add labels: cli_archive, cli_%name_acc_old%
         account_id = bluecoins_storage.get_account_id(account_name)
 
-        bluecoins_storage.add_label(account_id, 'cli_archive')
+        # Maybe rename to #cli_arcive_{account_name}
         bluecoins_storage.add_label(account_id, f'cli_{account_name}')
 
         # move transactions to account Archive
@@ -136,6 +138,43 @@ def _archive(
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
+
+
+@cli.command(help='Archive account')
+@click.option('-a', '--account-name', type=str)
+@click.pass_context
+def unarchive(
+    ctx: click.Context,
+    account_name: str,
+) -> None:
+    """Unarchive with CLI (manual DB selection)."""
+
+    _unarchive(account_name, ctx.obj['path'])
+
+
+def _unarchive(
+    account_name: str,
+    db_path: str,
+) -> None:
+    
+    conn = open_copy(db_path)
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+ 
+
+        account_currency = get_base_currency(conn)
+        bluecoins_storage.create_account(account_name, account_currency)
+        acc_new_id = bluecoins_storage.get_account_id(account_name)
+
+        archive_id = bluecoins_storage.get_account_id('Archive')
+        move_transactions_to_account(conn, archive_id, acc_new_id)
+
+        '''
+        Move all transaction from Arcive to the new account.
+        Delete all labels format: #cli_arcive, #cli_AccountName
+        '''
 
 
 @cli.command(help='Create account with account name')
