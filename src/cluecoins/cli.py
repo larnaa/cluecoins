@@ -19,6 +19,7 @@ from cluecoins.database import transaction
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
 from cluecoins.database import get_accounts_list
+from cluecoins.database import find_id_transactions_by_label
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
 from cluecoins.tui import run_tui
@@ -142,7 +143,7 @@ def _archive(
         delete_account(conn, account_id)
 
 
-@cli.command(help='Archive account')
+@cli.command(help='Unarchive account')
 @click.option('-a', '--account-name', type=str)
 @click.pass_context
 def unarchive(
@@ -164,16 +165,21 @@ def _unarchive(
     bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
- 
 
+        # get a list of id transactions on the account
+        label_name = 'clue_' + account_name
+        id_transactions = find_id_transactions_by_label(conn, label_name)
+
+        # create new account
         account_currency = get_base_currency(conn)
-        bluecoins_storage.create_account(account_name, account_currency)
+        if bluecoins_storage.create_account(account_name, account_currency) is False:
+            return print("account is exist")
+
         if bluecoins_storage.get_account_id(account_name) is False:
             return print("account is not exist")
         acc_new_id = bluecoins_storage.get_account_id(account_name)
 
         archive_id = bluecoins_storage.get_account_id('Archive')
-        move_transactions_to_account(conn, archive_id, acc_new_id)
 
         '''
         Move all transaction from Arcive to the new account.
