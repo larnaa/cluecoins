@@ -127,11 +127,13 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
-        # add labels: cli_archive, cli_%name_acc_old%
+        # add labels: clue_%name_acc_old%
+        if bluecoins_storage.get_account_id(account_name) is False:
+            return print("account is not exist")
         account_id = bluecoins_storage.get_account_id(account_name)
 
         # Maybe rename to #cli_arcive_{account_name}
-        bluecoins_storage.add_label(account_id, f'cli_{account_name}')
+        bluecoins_storage.add_label(account_id, f'clue_{account_name}')
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
@@ -166,6 +168,8 @@ def _unarchive(
 
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account(account_name, account_currency)
+        if bluecoins_storage.get_account_id(account_name) is False:
+            return print("account is not exist")
         acc_new_id = bluecoins_storage.get_account_id(account_name)
 
         archive_id = bluecoins_storage.get_account_id('Archive')
@@ -209,5 +213,7 @@ def add_label(
 
     with transaction(conn) as conn:
 
+        if bluecoins_storage.get_account_id(account_name) is False:
+            return print("account is not exist")
         account_id = bluecoins_storage.get_account_id(account_name)
         bluecoins_storage.add_label(account_id, label_name)

@@ -61,16 +61,17 @@ class BluecoinsStorage:
     def __init__(self, conn: Connection) -> None:
         self.conn = conn
 
-    def create_account(self, account_name: str, account_currency: str) -> None:
-        try:
-            if db.find_account(self.conn, account_name) is None:
-                db.create_new_account(self.conn, account_name, account_currency)
-        except:
-            return "account exist"
-
-    def get_account_id(self, account_name: str) -> int:
+    def create_account(self, account_name: str, account_currency: str) -> bool:
+        if db.find_account(self.conn, account_name) is None:
+            db.create_new_account(self.conn, account_name, account_currency)
+            return True
+        return False
+        
+    def get_account_id(self, account_name: str) -> int|bool:
         account_info = db.find_account(self.conn, account_name)
-        return int(account_info[0])
+        if account_info is not None:
+            return int(account_info[0])
+        return False
 
     def add_label(self, account_id: int, label_name: str) -> Any:
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
