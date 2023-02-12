@@ -79,10 +79,11 @@ def run_tui() -> None:
 
         window = Window(box="HEAVY")
 
-        archive_window = (window + "" + accounts_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
+        archive_window = (
+            window + "" + accounts_table + "" + Button('Back', lambda *_: manager.remove(window))
+        ).center()
 
         return archive_window
-
 
     def create_account_unarchive_window(manager: WindowManager) -> Window:
         """Create the window to choose an account by name and start unarchive.
@@ -90,13 +91,12 @@ def run_tui() -> None:
         Create an accounts info table.
         """
 
-
         con = lite.connect(db)
 
         archive_accounts_table = Container()
 
         for account in get_archive_accounts_list(con):
-            
+
             account_name = account[0]
             acc = Button(
                 account_name,
@@ -106,10 +106,11 @@ def run_tui() -> None:
 
         window = Window(box="HEAVY")
 
-        unarchive_window = (window + "" + archive_accounts_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
+        unarchive_window = (
+            window + "" + archive_accounts_table + "" + Button('Back', lambda *_: manager.remove(window))
+        ).center()
 
         return unarchive_window
-
 
     def start_convert(base_currency: str) -> None:
         import cluecoins.cli as cli

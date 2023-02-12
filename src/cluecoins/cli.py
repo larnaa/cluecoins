@@ -18,8 +18,9 @@ from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
-from cluecoins.database import get_accounts_list
 from cluecoins.database import find_id_transactions_by_label
+from cluecoins.database import move_transactions_to_account_with_id
+from cluecoins.database import delete_label
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
 from cluecoins.tui import run_tui
@@ -159,32 +160,31 @@ def _unarchive(
     account_name: str,
     db_path: str,
 ) -> None:
-    
+
     conn = open_copy(db_path)
 
     bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
 
-        # get a list of id transactions on the account
-        label_name = 'clue_' + account_name
-        id_transactions = find_id_transactions_by_label(conn, label_name)
-
         # create new account
         account_currency = get_base_currency(conn)
         if bluecoins_storage.create_account(account_name, account_currency) is False:
             return print("account is exist")
 
+        # get a list id transactions
+        label_name = 'clue_' + account_name
+        id_transactions = find_id_transactions_by_label(conn, label_name)
+
+        # get account IDs
         if bluecoins_storage.get_account_id(account_name) is False:
             return print("account is not exist")
         acc_new_id = bluecoins_storage.get_account_id(account_name)
 
-        archive_id = bluecoins_storage.get_account_id('Archive')
-
-        '''
-        Move all transaction from Arcive to the new account.
-        Delete all labels format: #cli_arcive, #cli_AccountName
-        '''
+        # move transactions
+        for id in id_transactions:
+            move_transactions_to_account_with_id(conn, id, acc_new_id)
+            delete_label(conn, label_name)
 
 
 @cli.command(help='Create account with account name')

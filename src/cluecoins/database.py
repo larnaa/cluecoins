@@ -132,22 +132,35 @@ def delete_account(conn: Connection, account_id: int) -> None:
     )
 
 
-# NOTE: Delete?
-
 def find_id_transactions_by_label(conn: Connection, label_name: str) -> list[Any]:
     transactions = conn.cursor().execute(
         'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
         (label_name,),
-    )   
-    if transactions.fetchall() == []:
-        raise Exception("The account doesn't exist.")
-
+    )
     return transactions.fetchall()
 
 
 def get_archive_accounts_list(conn: Connection) -> list[Any]:
     accounts = conn.cursor().execute(
-        "SELECT DISTINCT substr(labelName, 5) from LABELSTABLE WHERE labelName LIKE 'cli%' EXCEPT SELECT DISTINCT substr(labelName, 5) FROM LABELSTABLE WHERE labelName = 'cli_archive';"
+        "SELECT DISTINCT substr(labelName, 5) FROM LABELSTABLE \
+            WHERE labelName LIKE 'clue%';"
     )
     return accounts.fetchall()
 
+
+def move_transactions_to_account_with_id(conn: Connection, transaction_id: int, acc_new_id: int) -> None:
+    conn.execute(
+        'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE transactionsTableID = ?',
+        (acc_new_id, transaction_id),
+    )
+    conn.execute(
+        'UPDATE TRANSACTIONSTABLE SET accountPairID = ? WHERE transactionsTableID = ?',
+        (acc_new_id, transaction_id),
+    )
+
+
+def delete_label(conn: Connection, label_name: str) -> None:
+    conn.execute(
+        'DELETE FROM LABELSTABLE WHERE labelName = ?',
+        (label_name,),
+    )
