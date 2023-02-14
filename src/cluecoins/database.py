@@ -132,15 +132,15 @@ def delete_account(conn: Connection, account_id: int) -> None:
     )
 
 
-def find_id_transactions_by_label(conn: Connection, label_name: str) -> list[Any]:
+def find_first_transaction_id_by_label(conn: Connection, label_name: str) -> int:
     transactions = conn.cursor().execute(
         'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
         (label_name,),
     )
-    return transactions.fetchall()
+    return transactions.fetchone()
 
 
-def get_archive_accounts_list(conn: Connection) -> list[Any]:
+def get_archived_accounts(conn: Connection) -> list[Any]:  # change Any
     accounts = conn.cursor().execute(
         "SELECT DISTINCT substr(labelName, 5) FROM LABELSTABLE \
             WHERE labelName LIKE 'clue%';"
@@ -164,3 +164,11 @@ def delete_label(conn: Connection, label_name: str) -> None:
         'DELETE FROM LABELSTABLE WHERE labelName = ?',
         (label_name,),
     )
+
+
+def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list[str]:
+    transactions = conn.cursor().execute(
+        'SELECT labelName FROM LABELSTABLE WHERE transactionIDLabels = ?',
+        (transaction_id,),
+    )
+    return transactions.fetchall()

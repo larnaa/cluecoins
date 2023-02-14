@@ -79,9 +79,9 @@ class BluecoinsStorage:
             transaction_id = transaction_id_tuple[0]
             db.add_label_to_transaction(self.conn, label_name, transaction_id)
 
-    def encode_account_info(self, account_name: str):
+    def encode_account_info(self, account_name: str) -> str:
 
-        account_info: tuple = db.find_account(conn, account_name)
+        account_info = db.find_account(self.conn, account_name)
 
         delimiter = ','
         info: str = delimiter.join([str(value) for value in account_info])
@@ -89,7 +89,44 @@ class BluecoinsStorage:
         import base64
 
         info_bytes = info.encode("ascii")
-    
-        base64_bytes = base64.b64encode(info_bytes)
-        account_info_base64 = base64_bytes.decode("ascii") #create label + decocer
 
+        base64_bytes = base64.b64encode(info_bytes)
+        account_info_base64 = base64_bytes.decode("ascii")  # create label + decocer
+
+        return account_info_base64
+
+    def decode_account_info(self, account_name: str) -> tuple:
+
+        '''
+        LABELSTABLE
+
+        1. find transaction by label (clue_acc_name)
+        2. get transaction ID
+        3. find label (clue_base64_encode_info) by transaction ID
+
+        4. decode encode_info to acc_info tuple
+        ...
+        convert tuple to str
+        tuple ('None', '1', 'Visa', '100000' ... 'None')
+        str None,1,Visa,100000 ... None
+
+        convert str to base64
+        '''
+
+        label_name = f'clue_{account_name}'
+        transaction_id = db.find_first_transaction_id_by_label(self.conn, label_name)
+
+        label = db.find_labels_by_transaction_id(self.conn, transaction_id)
+
+        import base64
+
+        label_parts = label.split('_')
+
+        info_base64 = label_parts[-1]
+        base64_bytes = info_base64.encode('ascii')
+        message_bytes = base64.b64decode(base64_bytes)
+        account_info_str = message_bytes.decode('ascii')
+
+        account_info_tuple = tuple(account_info_str.split(','))
+
+        return account_info_tuple
