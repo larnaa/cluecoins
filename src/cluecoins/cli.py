@@ -9,22 +9,21 @@ import xdg
 
 from cluecoins.cache import QuoteCache
 from cluecoins.database import delete_account
+from cluecoins.database import delete_label
+from cluecoins.database import find_list_id_by_label
 from cluecoins.database import get_base_currency
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
 from cluecoins.database import move_transactions_to_account
+from cluecoins.database import move_transactions_to_account_with_id
 from cluecoins.database import open_copy
 from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
-from cluecoins.database import find_id_transactions_by_label
-from cluecoins.database import move_transactions_to_account_with_id
-from cluecoins.database import delete_label
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
 from cluecoins.tui import run_tui
-from sqlite3 import Connection
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -129,13 +128,15 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
+        info_base64 = bluecoins_storage.encode_account_info(account_name)
         # add labels: clue_%name_acc_old%
-        if bluecoins_storage.get_account_id(account_name) is False:
+        if bluecoins_storage.get_account_id(account_name) is None:
             return print("account is not exist")
         account_id = bluecoins_storage.get_account_id(account_name)
 
-        # Maybe rename to #cli_arcive_{account_name}
+        # Maybe rename to #clue_arcive_{account_name}
         bluecoins_storage.add_label(account_id, f'clue_{account_name}')
+        bluecoins_storage.add_label(account_id, f'clue_base64_{info_base64}')
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
@@ -174,7 +175,7 @@ def _unarchive(
 
         # get a list id transactions
         label_name = 'clue_' + account_name
-        id_transactions = find_id_transactions_by_label(conn, label_name)
+        id_transactions = find_list_id_by_label(conn, label_name)
 
         # get account IDs
         if bluecoins_storage.get_account_id(account_name) is False:
@@ -183,7 +184,7 @@ def _unarchive(
 
         # move transactions
         for id in id_transactions:
-            move_transactions_to_account_with_id(conn, id, acc_new_id)
+            move_transactions_to_account_with_id(conn, id[0], acc_new_id)
             delete_label(conn, label_name)
 
 

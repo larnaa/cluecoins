@@ -10,7 +10,7 @@ from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
 from cluecoins.database import get_accounts_list
-from cluecoins.database import get_archive_accounts_list
+from cluecoins.database import get_archived_accounts
 from cluecoins.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
@@ -95,12 +95,12 @@ def run_tui() -> None:
 
         archive_accounts_table = Container()
 
-        for account in get_archive_accounts_list(con):
+        for account in get_archived_accounts(con):
 
             account_name = account[0]
             acc = Button(
                 account_name,
-                partial(start_archive_account, account_name=account_name),
+                partial(start_unarchive_account, account_name=account_name),
             )
             archive_accounts_table += acc
 
@@ -121,6 +121,11 @@ def run_tui() -> None:
         import cluecoins.cli as cli
 
         cli._archive(account_name, db)
+
+    def start_unarchive_account(button: Button, account_name: str) -> None | str:
+        import cluecoins.cli as cli
+
+        cli._unarchive(account_name, db)
 
     def close_session() -> None:
         """Run app activity:
