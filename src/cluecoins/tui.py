@@ -122,7 +122,7 @@ def run_tui() -> None:
 
         cli._archive(account_name, db)
 
-    def start_unarchive_account(button: Button, account_name: str) -> None | str:
+    def start_unarchive_account(button: Button, account_name: str) -> None:
         import cluecoins.cli as cli
 
         cli._unarchive(account_name, db)

@@ -128,18 +128,20 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
-        info_base64 = bluecoins_storage.encode_account_info(account_name)
-        # add labels: clue_%name_acc_old%
-        if bluecoins_storage.get_account_id(account_name) is None:
-            return print("account is not exist")
+        account_info_base64 = bluecoins_storage.encode_account_info(account_name)
+
         account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return print("account is not exist")
 
         # Maybe rename to #clue_arcive_{account_name}
         bluecoins_storage.add_label(account_id, f'clue_{account_name}')
-        bluecoins_storage.add_label(account_id, f'clue_base64_{info_base64}')
+        bluecoins_storage.add_label(account_id, f'clue_base64_{account_info_base64}')
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
+        if account_archive_id is None:
+            return print("account is not exist")
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
@@ -169,6 +171,7 @@ def _unarchive(
     with transaction(conn) as conn:
 
         # create new account
+
         account_currency = get_base_currency(conn)
         if bluecoins_storage.create_account(account_name, account_currency) is False:
             return print("account is exist")
@@ -178,9 +181,9 @@ def _unarchive(
         id_transactions = find_list_id_by_label(conn, label_name)
 
         # get account IDs
-        if bluecoins_storage.get_account_id(account_name) is False:
-            return print("account is not exist")
         acc_new_id = bluecoins_storage.get_account_id(account_name)
+        if acc_new_id is None:
+            return print("account is not exist")
 
         # move transactions
         for id in id_transactions:
@@ -220,7 +223,7 @@ def add_label(
 
     with transaction(conn) as conn:
 
-        if bluecoins_storage.get_account_id(account_name) is False:
-            return print("account is not exist")
         account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return print("account is not exist")
         bluecoins_storage.add_label(account_id, label_name)
