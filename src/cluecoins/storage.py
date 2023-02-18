@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -79,14 +80,38 @@ class BluecoinsStorage:
             transaction_id = transaction_id_tuple[0]
             db.add_label_to_transaction(self.conn, label_name, transaction_id)
 
-    def encode_account_info(self, account_name: str) -> str:
+    def encode_account_info(self, account_name: str) -> str | None:
+
+        '''All this is true if the ACCOUNTSTABLE table has a schema:
+
+        CREATE TABLE ACCOUNTSTABLE(
+                        accountsTableID INTEGER PRIMARY KEY,
+                        accountName VARCHAR(63),
+                        accountTypeID INTEGER,
+                        accountHidden INTEGER,
+                        accountCurrency VARCHAR(5),
+                        accountConversionRateNew REAL,
+                        currencyChanged INTEGER,
+                        creditLimit INTEGER,
+                        cutOffDa INTEGER,
+                        creditCardDueDate INTEGER,
+                        cashBasedAccounts INTEGER,
+                        accountSelectorVisibility INTEGER,
+                        accountsExtraColumnInt1 INTEGER,
+                        accountsExtraColumnInt2 INTEGER,
+                        accountsExtraColumnString1 VARCHAR(255),
+                        accountsExtraColumnString2 VARCHAR(255)
+                    );
+        CREATE INDEX 'accountsTable1' ON ACCOUNTSTABLE(accountTypeID);
+        '''
 
         account_info = db.find_account(self.conn, account_name)
 
+        if account_info is None:
+            return None  # change all from False to None
+
         delimiter = ','
         info: str = delimiter.join([str(value) for value in account_info])
-
-        import base64
 
         info_bytes = info.encode("ascii")
 
@@ -95,7 +120,7 @@ class BluecoinsStorage:
 
         return account_info_base64
 
-    def decode_account_info(self, account_name: str) -> tuple:
+    def decode_account_info(self, account_name: str) -> tuple[Any, ...]:
 
         '''
         LABELSTABLE
@@ -114,19 +139,28 @@ class BluecoinsStorage:
         '''
 
         label_name = f'clue_{account_name}'
-        transaction_id = db.find_first_transaction_id_by_label(self.conn, label_name)
+        transaction_id = db.find_list_id_by_label(self.conn, label_name)[0][0]
 
-        label = db.find_labels_by_transaction_id(self.conn, transaction_id)
+        labels_list = db.find_labels_by_transaction_id(self.conn, transaction_id)
 
-        import base64
+        for label in labels_list:
+            label_base64 = label[0][0:11]
+            if label_base64 != 'clue_base64':
+                continue
 
-        label_parts = label.split('_')
+            label_parts = label[0].split('_')
+            account_info_base64 = label_parts[-1]
 
-        info_base64 = label_parts[-1]
-        base64_bytes = info_base64.encode('ascii')
-        message_bytes = base64.b64decode(base64_bytes)
-        account_info_str = message_bytes.decode('ascii')
+            base64_bytes = account_info_base64.encode('ascii')
 
-        account_info_tuple = tuple(account_info_str.split(','))
+            sample_string_bytes = base64.b64decode(base64_bytes)
+            sample_string: str = sample_string_bytes.decode('ascii')
 
-        return account_info_tuple
+            account_info_tuple = tuple(sample_string.split(','))
+
+            ...
+
+        account_info_list = list(account_info_tuple)
+        account_info_list.pop(0)
+        account_info = tuple(account_info_list)
+        return account_info

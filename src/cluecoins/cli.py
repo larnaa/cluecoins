@@ -8,6 +8,7 @@ import click
 import xdg
 
 from cluecoins.cache import QuoteCache
+from cluecoins.database import create_archived_account
 from cluecoins.database import delete_account
 from cluecoins.database import delete_label
 from cluecoins.database import find_list_id_by_label
@@ -128,6 +129,7 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
+        # TODO: fix: NULL is written as None
         account_info_base64 = bluecoins_storage.encode_account_info(account_name)
 
         account_id = bluecoins_storage.get_account_id(account_name)
@@ -170,13 +172,11 @@ def _unarchive(
 
     with transaction(conn) as conn:
 
-        # create new account
+        # get account info
+        account_info = bluecoins_storage.decode_account_info(account_name)
 
-        account_currency = get_base_currency(conn)
-        if bluecoins_storage.create_account(account_name, account_currency) is False:
-            return print("account is exist")
+        create_archived_account(conn, account_info)
 
-        # get a list id transactions
         label_name = 'clue_' + account_name
         id_transactions = find_list_id_by_label(conn, label_name)
 
