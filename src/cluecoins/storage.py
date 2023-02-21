@@ -113,10 +113,10 @@ class BluecoinsStorage:
         delimiter = ','
         info: str = delimiter.join([str(value) for value in account_info])
 
-        info_bytes = info.encode("ascii")
+        info_bytes = info.encode("utf-8")
 
         base64_bytes = base64.b64encode(info_bytes)
-        account_info_base64 = base64_bytes.decode("ascii")  # create label + decocer
+        account_info_base64 = base64_bytes.decode("utf-8")  # create label + decocer
 
         return account_info_base64
 
@@ -151,14 +151,12 @@ class BluecoinsStorage:
             label_parts = label[0].split('_')
             account_info_base64 = label_parts[-1]
 
-            base64_bytes = account_info_base64.encode('ascii')
+            base64_bytes = account_info_base64.encode('utf-8')
 
             sample_string_bytes = base64.b64decode(base64_bytes)
-            sample_string: str = sample_string_bytes.decode('ascii')
+            sample_string: str = sample_string_bytes.decode('utf-8')
 
             account_info_tuple = tuple(sample_string.split(','))
-
-            ...
 
         account_info_list = list(account_info_tuple)
         account_info_list.pop(0)

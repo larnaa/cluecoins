@@ -184,8 +184,11 @@ def find_list_id_by_label(conn: Connection, label_name: str) -> list[tuple[int]]
 
 def get_archived_accounts(conn: Connection) -> list[Any]:  # change Any
     accounts = conn.cursor().execute(
-        "SELECT DISTINCT substr(labelName, 5) FROM LABELSTABLE \
-            WHERE labelName LIKE 'clue%';"
+        "SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
+            WHERE labelName LIKE 'clue_%' \
+            EXCEPT \
+            SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
+            WHERE labelName LIKE 'clue_base%';"
     )
     return accounts.fetchall()
 
