@@ -68,11 +68,11 @@ class BluecoinsStorage:
             return True
         return False
 
-    def get_account_id(self, account_name: str) -> int | None:
+    def get_account_id(self, account_name: str) -> int | bool:
         account_info = db.find_account(self.conn, account_name)
         if account_info is not None:
             return int(account_info[0])
-        return None  # change all from False to None
+        return False
 
     def add_label(self, account_id: int, label_name: str) -> Any:
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
@@ -80,7 +80,7 @@ class BluecoinsStorage:
             transaction_id = transaction_id_tuple[0]
             db.add_label_to_transaction(self.conn, label_name, transaction_id)
 
-    def encode_account_info(self, account_name: str) -> str | None:
+    def encode_account_info(self, account_name: str) -> str | bool:
 
         '''All this is true if the ACCOUNTSTABLE table has a schema:
 
@@ -108,7 +108,7 @@ class BluecoinsStorage:
         account_info = db.find_account(self.conn, account_name)
 
         if account_info is None:
-            return None  # change all from False to None
+            return False
 
         delimiter = ','
         info: str = delimiter.join([str(value) for value in account_info])
@@ -116,30 +116,13 @@ class BluecoinsStorage:
         info_bytes = info.encode("utf-8")
 
         base64_bytes = base64.b64encode(info_bytes)
-        account_info_base64 = base64_bytes.decode("utf-8")  # create label + decocer
+        account_info_base64 = base64_bytes.decode("utf-8")
 
         return account_info_base64
 
     def decode_account_info(self, account_name: str) -> tuple[Any, ...]:
-
-        '''
-        LABELSTABLE
-
-        1. find transaction by label (clue_acc_name)
-        2. get transaction ID
-        3. find label (clue_base64_encode_info) by transaction ID
-
-        4. decode encode_info to acc_info tuple
-        ...
-        convert tuple to str
-        tuple ('None', '1', 'Visa', '100000' ... 'None')
-        str None,1,Visa,100000 ... None
-
-        convert str to base64
-        '''
-
         label_name = f'clue_{account_name}'
-        transaction_id = db.find_list_id_by_label(self.conn, label_name)[0][0]
+        transaction_id = db.find_transactions_by_label(self.conn, label_name)[0][0]
 
         labels_list = db.find_labels_by_transaction_id(self.conn, transaction_id)
 

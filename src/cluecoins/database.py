@@ -174,7 +174,7 @@ def delete_account(conn: Connection, account_id: int) -> None:
     )
 
 
-def find_list_id_by_label(conn: Connection, label_name: str) -> list[tuple[int]]:
+def find_transactions_by_label(conn: Connection, label_name: str) -> list[tuple[int]]:
     transactions = conn.cursor().execute(
         'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
         (label_name,),
