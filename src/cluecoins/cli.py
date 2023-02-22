@@ -25,7 +25,6 @@ from cluecoins.database import update_account
 from cluecoins.database import update_transaction
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
-from cluecoins.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -52,12 +51,16 @@ def cli(ctx: click.Context, path: str) -> None:
     ctx.obj['path'] = path
 
 
+# new option --db
 @root.command(help='Start user interface')
+@click.option('--db', type=click.Path(exists=True))
 @click.pass_context
 def tui(
-    ctx: click.Context,
+    ctx: click.Context, db: str | None
 ) -> None:
-    run_tui()
+    from cluecoins.tui import run_tui
+
+    run_tui(db)
 
 
 @cli.command(help='Convert database to another main currency')
@@ -134,7 +137,7 @@ def _archive(
         account_info_base64 = bluecoins_storage.encode_account_info(account_name)
 
         account_id = bluecoins_storage.get_account_id(account_name)
-        if account_id is False:
+        if account_id is None:
             return print("account is not exist")
 
         # Maybe rename to #clue_arcive_{account_name}
@@ -143,8 +146,8 @@ def _archive(
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
-        if account_archive_id is False:
-            return print("account is not exist")
+        if account_archive_id is None:
+            return print("account does not exist")
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)

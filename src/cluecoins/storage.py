@@ -68,11 +68,11 @@ class BluecoinsStorage:
             return True
         return False
 
-    def get_account_id(self, account_name: str) -> int | bool:
+    def get_account_id(self, account_name: str) -> int | None:
         account_info = db.find_account(self.conn, account_name)
         if account_info is not None:
             return int(account_info[0])
-        return False
+        return None
 
     def add_label(self, account_id: int, label_name: str) -> Any:
         # find all transation with ID account and add labels with id transactions to LABELSTABEL
@@ -80,7 +80,7 @@ class BluecoinsStorage:
             transaction_id = transaction_id_tuple[0]
             db.add_label_to_transaction(self.conn, label_name, transaction_id)
 
-    def encode_account_info(self, account_name: str) -> str | bool:
+    def encode_account_info(self, account_name: str) -> str | None:
 
         '''All this is true if the ACCOUNTSTABLE table has a schema:
 
@@ -108,7 +108,7 @@ class BluecoinsStorage:
         account_info = db.find_account(self.conn, account_name)
 
         if account_info is None:
-            return False
+            return None
 
         delimiter = ','
         info: str = delimiter.join([str(value) for value in account_info])

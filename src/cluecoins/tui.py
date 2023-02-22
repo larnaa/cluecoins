@@ -12,6 +12,7 @@ from pytermgui.window_manager.window import Window
 from cluecoins.database import get_accounts_list
 from cluecoins.database import get_archived_accounts
 from cluecoins.sync_manager import SyncManager
+import cluecoins.cli as cli
 
 PYTERMGUI_CONFIG = """
 config:
@@ -35,10 +36,13 @@ config:
 """
 
 
-def run_tui() -> None:
+def run_tui(db_path: str | None) -> None:
 
     sync = SyncManager()
-    db = sync.prepare_local_db()
+    if not db_path:
+        db = sync.prepare_local_db()
+    else:
+        db = db_path
 
     def create_currency_window(manager: WindowManager) -> Window:
         """Create the window to choose a currency and start convert."""
@@ -113,17 +117,14 @@ def run_tui() -> None:
         return unarchive_window
 
     def start_convert(base_currency: str) -> None:
-        import cluecoins.cli as cli
 
         cli._convert(base_currency, db)
 
     def start_archive_account(button: Button, account_name: str) -> None:
-        import cluecoins.cli as cli
 
         cli._archive(account_name, db)
 
     def start_unarchive_account(button: Button, account_name: str) -> None:
-        import cluecoins.cli as cli
 
         cli._unarchive(account_name, db)
 
@@ -134,8 +135,9 @@ def run_tui() -> None:
         Close terminal interface.
         """
 
-        # FIXME: hardcode
-        sync.push_changes_to_app('.ui.activities.main.MainActivity')
+        if not db_path:
+            # FIXME: hardcode
+            sync.push_changes_to_app('.ui.activities.main.MainActivity')
         sys.exit(0)
 
     with YamlLoader() as loader:
