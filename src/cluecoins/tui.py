@@ -9,10 +9,10 @@ from pytermgui.widgets.containers import Container
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
+import cluecoins.cli as cli
 from cluecoins.database import get_accounts_list
 from cluecoins.database import get_archived_accounts
 from cluecoins.sync_manager import SyncManager
-import cluecoins.cli as cli
 
 PYTERMGUI_CONFIG = """
 config:
@@ -43,6 +43,55 @@ def run_tui(db_path: str | None) -> None:
         db = sync.prepare_local_db()
     else:
         db = db_path
+
+    with YamlLoader() as loader:
+        loader.load(PYTERMGUI_CONFIG)
+
+    with WindowManager() as manager:
+        """Create the generic main aplication window."""
+
+        main_window = Window(width=60, box="DOUBLE")
+
+        window = (
+            (
+                main_window
+                + ""
+                + Label(
+                    "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                )
+                + ""
+                + Container(
+                    "In development:",
+                    Label("- archive"),
+                    box="EMPTY_VERTICAL",
+                )
+                + ""
+                + Button('Convert', lambda *_: manager.add(create_currency_window(manager)))
+                + ""
+                + Button('Archive', lambda *_: manager.add(create_account_archive_window(manager)))
+                + ""
+                + Button('Unarchive', lambda *_: manager.add(create_account_unarchive_window(manager)))
+                + ""
+                + Button('Exit programm', lambda *_: close_session())
+                + ""
+            )
+            .set_title("[210 bold]Bluecoins CLI")
+            .center()
+        )
+
+        manager.add(window)
+
+    def close_session() -> None:
+        """Run app activity:
+                default: opening an app on the phone
+
+        Close terminal interface.
+        """
+
+        if not db_path:
+            # FIXME: hardcode
+            sync.push_changes_to_app('.ui.activities.main.MainActivity')
+        sys.exit(0)
 
     def create_currency_window(manager: WindowManager) -> Window:
         """Create the window to choose a currency and start convert."""
@@ -97,24 +146,44 @@ def run_tui(db_path: str | None) -> None:
 
         con = lite.connect(db)
 
-        archive_accounts_table = Container()
+        unarchive_accounts_table = Container()
 
         for account in get_archived_accounts(con):
-
             account_name = account[0]
             acc = Button(
-                account_name,
-                partial(start_unarchive_account, account_name=account_name),
+                label=account_name,
+                onclick=partial(start_unarchive_account, account_name=account_name),
             )
-            archive_accounts_table += acc
+            unarchive_accounts_table += acc
 
         window = Window(box="HEAVY")
 
         unarchive_window = (
-            window + "" + archive_accounts_table + "" + Button('Back', lambda *_: manager.remove(window))
+            window
+            + ""
+            + refresh_unarchive_container(con, account_name, unarchive_accounts_table)
+            + ""
+            + Button('Back', lambda *_: manager.remove(window))
         ).center()
 
         return unarchive_window
+
+    def refresh_unarchive_container(conn: lite.Connection, account_name: str, account_table: Container) -> Container:
+
+        start_unarchive_account(None, account_name)
+
+        account_table._widgets.clear()
+
+        for account in get_archived_accounts(conn):
+
+            account_name = account[0]
+            acc = Button(
+                label=account_name,
+                onclick=partial(start_unarchive_account, account_name=account_name),
+            )
+            account_table += acc
+
+        return account_table
 
     def start_convert(base_currency: str) -> None:
 
@@ -124,55 +193,6 @@ def run_tui(db_path: str | None) -> None:
 
         cli._archive(account_name, db)
 
-    def start_unarchive_account(button: Button, account_name: str) -> None:
+    def start_unarchive_account(button: Button | None, account_name: str) -> None:
 
         cli._unarchive(account_name, db)
-
-    def close_session() -> None:
-        """Run app activity:
-                default: opening an app on the phone
-
-        Close terminal interface.
-        """
-
-        if not db_path:
-            # FIXME: hardcode
-            sync.push_changes_to_app('.ui.activities.main.MainActivity')
-        sys.exit(0)
-
-    with YamlLoader() as loader:
-        loader.load(PYTERMGUI_CONFIG)
-
-    with WindowManager() as manager:
-        """Create the generic main aplication window."""
-
-        main_window = Window(width=60, box="DOUBLE")
-
-        window = (
-            (
-                main_window
-                + ""
-                + Label(
-                    "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                )
-                + ""
-                + Container(
-                    "In development:",
-                    Label("- archive"),
-                    box="EMPTY_VERTICAL",
-                )
-                + ""
-                + Button('Convert', lambda *_: manager.add(create_currency_window(manager)))
-                + ""
-                + Button('Archive', lambda *_: manager.add(create_account_archive_window(manager)))
-                + ""
-                + Button('Unarchive', lambda *_: manager.add(create_account_unarchive_window(manager)))
-                + ""
-                + Button('Exit programm', lambda *_: close_session())
-                + ""
-            )
-            .set_title("[210 bold]Bluecoins CLI")
-            .center()
-        )
-
-        manager.add(window)
