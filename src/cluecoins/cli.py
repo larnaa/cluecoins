@@ -8,19 +8,25 @@ import click
 import xdg
 
 from cluecoins.cache import QuoteCache
+from cluecoins.database import ENCODED_LABEL_PREFIX
+from cluecoins.database import LABEL_PREFIX
+from cluecoins.database import connect_local_db
+from cluecoins.database import create_archived_account
 from cluecoins.database import delete_account
+from cluecoins.database import delete_label
+from cluecoins.database import find_labels_by_transaction_id
+from cluecoins.database import find_transactions_by_label
 from cluecoins.database import get_base_currency
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
 from cluecoins.database import move_transactions_to_account
-from cluecoins.database import open_copy
+from cluecoins.database import move_transactions_to_account_with_id
 from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
 from cluecoins.storage import BluecoinsStorage
 from cluecoins.storage import Storage
-from cluecoins.tui import run_tui
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,12 +53,14 @@ def cli(ctx: click.Context, path: str) -> None:
     ctx.obj['path'] = path
 
 
+# new option --db
 @root.command(help='Start user interface')
+@click.option('--db', type=click.Path(exists=True))
 @click.pass_context
-def tui(
-    ctx: click.Context,
-) -> None:
-    run_tui()
+def tui(ctx: click.Context, db: str | None) -> None:
+    from cluecoins.tui import run_tui
+
+    run_tui(db)
 
 
 @cli.command(help='Convert database to another main currency')
@@ -69,7 +77,7 @@ def convert(
 
 def _convert(base_currency: str, db_path: str) -> None:
 
-    conn = open_copy(db_path)
+    conn = connect_local_db(db_path)
 
     storage = Storage(Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db')
     storage.create_quote_table()
@@ -116,7 +124,7 @@ def _archive(
     db_path: str,
 ) -> None:
 
-    conn = open_copy(db_path)
+    conn = connect_local_db(db_path)
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -125,17 +133,71 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
-        # add labels: cli_archive, cli_%name_acc_old%
-        account_id = bluecoins_storage.get_account_id(account_name)
+        # FIXME: NULL is written as None
+        account_info_base64 = bluecoins_storage.encode_account_info(account_name)
 
-        bluecoins_storage.add_label(account_id, 'cli_archive')
-        bluecoins_storage.add_label(account_id, f'cli_{account_name}')
+        account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return None  # account does not exist
+
+        # Maybe rename to #clue_arcive_{account_name}
+        bluecoins_storage.add_label(account_id, f'{LABEL_PREFIX}{account_name}')
+        bluecoins_storage.add_label(account_id, f'{ENCODED_LABEL_PREFIX}{account_info_base64}')
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
+        if account_archive_id is None:
+            return None  # account does not exist
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
+
+
+@cli.command(help='Unarchive account')
+@click.option('-a', '--account-name', type=str)
+@click.pass_context
+def unarchive(
+    ctx: click.Context,
+    account_name: str,
+) -> None:
+    """Unarchive with CLI (manual DB selection)."""
+
+    _unarchive(account_name, ctx.obj['path'])
+
+
+def _unarchive(
+    account_name: str,
+    db_path: str,
+) -> None:
+
+    conn = connect_local_db(db_path)
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+
+        # create account
+        account_info = bluecoins_storage.decode_account_info(account_name)
+        create_archived_account(conn, account_info)
+
+        label_name = 'clue_' + account_name
+        id_transactions = find_transactions_by_label(conn, label_name)
+
+        # get account IDs
+        acc_new_id = bluecoins_storage.get_account_id(account_name)
+        if acc_new_id is None:
+            return None  # account does not exist
+
+        # move transactions
+        for id in id_transactions:
+            move_transactions_to_account_with_id(conn, id[0], acc_new_id)
+
+            delete_label(conn, label_name)
+
+            labels_list = find_labels_by_transaction_id(conn, id[0])
+            for label in labels_list:
+                if label[0].startswith(ENCODED_LABEL_PREFIX):
+                    delete_label(conn, label[0])
 
 
 @cli.command(help='Create account with account name')
@@ -145,7 +207,7 @@ def create_account(
     ctx: click.Context,
     account_name: str,
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    conn = connect_local_db(ctx.obj['path'])
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -164,11 +226,13 @@ def add_label(
     account_name: str,
     label_name: str,
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    conn = connect_local_db(ctx.obj['path'])
 
     bluecoins_storage = BluecoinsStorage(conn)
 
     with transaction(conn) as conn:
 
         account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return print("account is not exist")
         bluecoins_storage.add_label(account_id, label_name)

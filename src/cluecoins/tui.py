@@ -9,7 +9,9 @@ from pytermgui.widgets.containers import Container
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
-from cluecoins.database import get_account_list
+import cluecoins.cli as cli
+from cluecoins.database import get_accounts_list
+from cluecoins.database import get_archived_accounts
 from cluecoins.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
@@ -34,63 +36,94 @@ config:
 """
 
 
-def run_tui() -> None:
+def run_tui(db_path: str | None) -> None:
 
     sync = SyncManager()
-    db = sync.prepare_local_db()
+    if not db_path:
+        db = sync.prepare_local_db()
+    else:
+        db = db_path
 
-    def get_choose_currency_window(manager: WindowManager) -> Window:
-        """Create the window to choose a currency and start convert."""
+        def create_currency_window(manager: WindowManager) -> Window:
+            '''Create the window to choose a currency and start convert.'''
 
-        # FIXME: hardcode
-        base_currency = 'USD'
-        window = Window()
+            # FIXME: hardcode
+            base_currency = 'USD'
+            window = Window()
 
-        currency_window = (
-            window
-            + ""
-            + Button(base_currency, lambda *_: start_convert(base_currency))
-            + ""
-            + Button('Back', lambda *_: manager.remove(window))
-        ).center()
+            currency_window = (
+                window
+                + ""
+                + Button(base_currency, lambda *_: start_convert(base_currency))
+                + ""
+                + Button('Back', lambda *_: manager.remove(window))
+            ).center()
 
-        return currency_window
+            return currency_window
 
-    def get_choose_account_archive_window(manager: WindowManager) -> Window:
+    def create_account_archive_window(manager: WindowManager) -> Window:
         """Create the window to choose an account by name and start archive.
 
-        Create an account info table.
+        Create an accounts info table.
         """
-
-        # FIXME: when you select several accounts, only the last one clicked is archived.
 
         con = lite.connect(db)
 
-        account_table = Container()
+        accounts_table = Container()
 
-        for account in get_account_list(con):
+        for account in get_accounts_list(con):
             account_name = account[0]
             acc = Button(
                 account_name,
                 partial(start_archive_account, account_name=account_name),
             )
-            account_table += acc
+            accounts_table += acc
 
         window = Window(box="HEAVY")
 
-        archive_window = (window + "" + account_table + "" + Button('Back', lambda *_: manager.remove(window))).center()
+        archive_window = (
+            window + "" + accounts_table + "" + Button('Back', lambda *_: manager.remove(window))
+        ).center()
 
         return archive_window
 
+    def create_account_unarchive_window(manager: WindowManager) -> Window:
+        """Create the window to choose an account by name and start unarchive.
+
+        Create an accounts info table.
+        """
+
+        con = lite.connect(db)
+
+        unarchive_accounts_table = Container()
+
+        for account in get_archived_accounts(con):
+            account_name = account[0]
+            acc = Button(
+                label=account_name,
+                onclick=partial(start_unarchive_account, account_name=account_name),
+            )
+            unarchive_accounts_table += acc
+
+        window = Window(box="HEAVY")
+
+        unarchive_window = (
+            window + "" + unarchive_accounts_table + "" + Button('Back', lambda *_: manager.remove(window))
+        ).center()
+
+        return unarchive_window
+
     def start_convert(base_currency: str) -> None:
-        import cluecoins.cli as cli
 
         cli._convert(base_currency, db)
 
     def start_archive_account(button: Button, account_name: str) -> None:
-        import cluecoins.cli as cli
 
         cli._archive(account_name, db)
+
+    def start_unarchive_account(button: Button | None, account_name: str) -> None:
+
+        cli._unarchive(account_name, db)
 
     def close_session() -> None:
         """Run app activity:
@@ -99,8 +132,9 @@ def run_tui() -> None:
         Close terminal interface.
         """
 
-        # FIXME: hardcode
-        sync.push_changes_to_app('.ui.activities.main.MainActivity')
+        if not db_path:
+            # FIXME: hardcode
+            sync.push_changes_to_app('.ui.activities.main.MainActivity')
         sys.exit(0)
 
     with YamlLoader() as loader:
@@ -125,9 +159,11 @@ def run_tui() -> None:
                     box="EMPTY_VERTICAL",
                 )
                 + ""
-                + Button('Convert', lambda *_: manager.add(get_choose_currency_window(manager)))
+                + Button('Convert', lambda *_: manager.add(create_currency_window(manager)))
                 + ""
-                + Button('Archive', lambda *_: manager.add(get_choose_account_archive_window(manager)))
+                + Button('Archive', lambda *_: manager.add(create_account_archive_window(manager)))
+                + ""
+                + Button('Unarchive', lambda *_: manager.add(create_account_unarchive_window(manager)))
                 + ""
                 + Button('Exit programm', lambda *_: close_session())
                 + ""

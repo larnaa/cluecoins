@@ -1,6 +1,5 @@
 """Module with queries to the Bluecoins database."""
 
-import shutil
 from contextlib import contextmanager
 from datetime import datetime
 from decimal import Decimal
@@ -10,13 +9,14 @@ from sqlite3 import connect
 from typing import Any
 from typing import Iterator
 
+LABEL_PREFIX = 'clue_'
+ENCODED_LABEL_PREFIX = 'clue_base64_'
 
-def open_copy(path: str, postfix: str = '.new') -> Connection:
+
+def connect_local_db(path: str) -> Connection:
     if not path.endswith('.fydb'):
         raise Exception('wrong extension')
-    new_path = path.replace('.fydb', f'{postfix}.fydb')
-    shutil.copyfile(path, new_path)
-    return connect(new_path)
+    return connect(path)
 
 
 @contextmanager
@@ -79,7 +79,7 @@ def find_account(conn: Connection, account_name: str) -> Any:
     return account.fetchone()
 
 
-def get_account_list(conn: Connection) -> list[Any]:
+def get_accounts_list(conn: Connection) -> list[Any]:
     account = conn.cursor().execute(
         'SELECT accountName, accountConversionRateNew FROM ACCOUNTSTABLE',
     )
@@ -114,6 +114,48 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
     )
 
 
+def create_archived_account(conn: Connection, account_info: tuple[Any, ...]) -> None:
+
+    (
+        account_name,
+        account_type_id,
+        account_hidden,
+        account_currency,
+        account_conversion_rate_new,
+        currency_changed,
+        credit_limit,
+        cut_off_da,
+        credit_card_due_date,
+        cash_based_accounts,
+        account_selector_visibility,
+        accounts_extra_column_int1,
+        accounts_extra_column_int2,
+        accounts_extra_column_string1,
+        accounts_extra_column_string2,
+    ) = account_info
+    conn.execute(
+        'INSERT INTO ACCOUNTSTABLE(accountName, accountTypeID, accountHidden, accountCurrency, accountConversionRateNew, currencyChanged, creditLimit, cutOffDa, creditCardDueDate, cashBasedAccounts, accountSelectorVisibility, accountsExtraColumnInt1, accountsExtraColumnInt2, accountsExtraColumnString1, accountsExtraColumnString2) \
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (
+            account_name,
+            account_type_id,
+            account_hidden,
+            account_currency,
+            account_conversion_rate_new,
+            currency_changed,
+            credit_limit,
+            cut_off_da,
+            credit_card_due_date,
+            cash_based_accounts,
+            account_selector_visibility,
+            accounts_extra_column_int1,
+            accounts_extra_column_int2,
+            accounts_extra_column_string1,
+            accounts_extra_column_string2,
+        ),
+    )
+
+
 def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
     conn.execute(
         'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE accountID = ?',
@@ -130,3 +172,48 @@ def delete_account(conn: Connection, account_id: int) -> None:
         'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
         (account_id,),
     )
+
+
+def find_transactions_by_label(conn: Connection, label_name: str) -> list[tuple[int]]:
+    transactions = conn.cursor().execute(
+        'SELECT transactionIDLabels FROM LABELSTABLE where labelName = ?',
+        (label_name,),
+    )
+    return transactions.fetchall()
+
+
+def get_archived_accounts(conn: Connection) -> list[Any]:  # change Any
+    accounts = conn.cursor().execute(
+        f"SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
+            WHERE labelName LIKE '{LABEL_PREFIX}%' \
+            EXCEPT \
+            SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
+            WHERE labelName LIKE '{ENCODED_LABEL_PREFIX}%';"
+    )
+    return accounts.fetchall()
+
+
+def move_transactions_to_account_with_id(conn: Connection, transaction_id: int, acc_new_id: int) -> None:
+    conn.execute(
+        'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE transactionsTableID = ?',
+        (acc_new_id, transaction_id),
+    )
+    conn.execute(
+        'UPDATE TRANSACTIONSTABLE SET accountPairID = ? WHERE transactionsTableID = ?',
+        (acc_new_id, transaction_id),
+    )
+
+
+def delete_label(conn: Connection, label_name: str) -> None:
+    conn.execute(
+        'DELETE FROM LABELSTABLE WHERE labelName = ?',
+        (label_name,),
+    )
+
+
+def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list[list[str]]:
+    labels = conn.cursor().execute(
+        'SELECT labelName FROM LABELSTABLE WHERE transactionIDLabels = ?',
+        (transaction_id,),
+    )
+    return labels.fetchall()
