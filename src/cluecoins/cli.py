@@ -8,6 +8,7 @@ import click
 import xdg
 
 from cluecoins.cache import QuoteCache
+from cluecoins.database import connect_local_db
 from cluecoins.database import create_archived_account
 from cluecoins.database import delete_account
 from cluecoins.database import delete_label
@@ -18,7 +19,6 @@ from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
 from cluecoins.database import move_transactions_to_account
 from cluecoins.database import move_transactions_to_account_with_id
-from cluecoins.database import open_copy
 from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
@@ -55,9 +55,7 @@ def cli(ctx: click.Context, path: str) -> None:
 @root.command(help='Start user interface')
 @click.option('--db', type=click.Path(exists=True))
 @click.pass_context
-def tui(
-    ctx: click.Context, db: str | None
-) -> None:
+def tui(ctx: click.Context, db: str | None) -> None:
     from cluecoins.tui import run_tui
 
     run_tui(db)
@@ -77,7 +75,7 @@ def convert(
 
 def _convert(base_currency: str, db_path: str) -> None:
 
-    conn = open_copy(db_path)
+    conn = connect_local_db(db_path)
 
     storage = Storage(Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db')
     storage.create_quote_table()
@@ -124,7 +122,7 @@ def _archive(
     db_path: str,
 ) -> None:
 
-    conn = open_copy(db_path)
+    conn = connect_local_db(db_path)
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -170,7 +168,7 @@ def _unarchive(
     db_path: str,
 ) -> None:
 
-    conn = open_copy(db_path)
+    conn = connect_local_db(db_path)
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -208,7 +206,7 @@ def create_account(
     ctx: click.Context,
     account_name: str,
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    conn = connect_local_db(ctx.obj['path'])
 
     bluecoins_storage = BluecoinsStorage(conn)
 
@@ -227,7 +225,7 @@ def add_label(
     account_name: str,
     label_name: str,
 ) -> None:
-    conn = open_copy(ctx.obj['path'])
+    conn = connect_local_db(ctx.obj['path'])
 
     bluecoins_storage = BluecoinsStorage(conn)
 

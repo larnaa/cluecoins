@@ -1,6 +1,5 @@
 """Module with queries to the Bluecoins database."""
 
-import shutil
 from contextlib import contextmanager
 from datetime import datetime
 from decimal import Decimal
@@ -11,12 +10,10 @@ from typing import Any
 from typing import Iterator
 
 
-def open_copy(path: str, postfix: str = '.new') -> Connection:
+def connect_local_db(path: str) -> Connection:
     if not path.endswith('.fydb'):
         raise Exception('wrong extension')
-    new_path = path.replace('.fydb', f'{postfix}.fydb')
-    shutil.copyfile(path, new_path)
-    return connect(new_path)
+    return connect(path)
 
 
 @contextmanager
