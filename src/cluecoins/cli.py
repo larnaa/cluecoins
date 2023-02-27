@@ -183,7 +183,7 @@ def _unarchive(
 
         # get account IDs
         acc_new_id = bluecoins_storage.get_account_id(account_name)
-        if acc_new_id is False:
+        if acc_new_id is None:
             return print("account is not exist")
 
         # move transactions
@@ -232,6 +232,6 @@ def add_label(
     with transaction(conn) as conn:
 
         account_id = bluecoins_storage.get_account_id(account_name)
-        if account_id is False:
+        if account_id is None:
             return print("account is not exist")
         bluecoins_storage.add_label(account_id, label_name)
