@@ -8,6 +8,7 @@ from typing import Any
 from typing import Optional
 
 from cluecoins import database as db
+from cluecoins.database import ENCODED_LABEL_PREFIX
 
 
 class Storage:
@@ -127,8 +128,7 @@ class BluecoinsStorage:
         labels_list = db.find_labels_by_transaction_id(self.conn, transaction_id)
 
         for label in labels_list:
-            label_base64 = label[0][0:11]
-            if label_base64 != 'clue_base64':
+            if not label[0].startswith(ENCODED_LABEL_PREFIX):
                 continue
 
             label_parts = label[0].split('_')
@@ -141,7 +141,12 @@ class BluecoinsStorage:
 
             account_info_tuple = tuple(sample_string.split(','))
 
-        account_info_list = list(account_info_tuple)
+        account_info_list: list[str | None] = list(account_info_tuple)
+
+        for i, info in enumerate(account_info_list):
+            if info == 'None':
+                account_info_list[i] = None
+
         account_info_list.pop(0)
         account_info = tuple(account_info_list)
         return account_info

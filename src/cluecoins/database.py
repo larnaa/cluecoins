@@ -9,6 +9,9 @@ from sqlite3 import connect
 from typing import Any
 from typing import Iterator
 
+LABEL_PREFIX = 'clue_'
+ENCODED_LABEL_PREFIX = 'clue_base64_'
+
 
 def connect_local_db(path: str) -> Connection:
     if not path.endswith('.fydb'):
@@ -181,11 +184,11 @@ def find_transactions_by_label(conn: Connection, label_name: str) -> list[tuple[
 
 def get_archived_accounts(conn: Connection) -> list[Any]:  # change Any
     accounts = conn.cursor().execute(
-        "SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
-            WHERE labelName LIKE 'clue_%' \
+        f"SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
+            WHERE labelName LIKE '{LABEL_PREFIX}%' \
             EXCEPT \
             SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
-            WHERE labelName LIKE 'clue_base%';"
+            WHERE labelName LIKE '{ENCODED_LABEL_PREFIX}%';"
     )
     return accounts.fetchall()
 

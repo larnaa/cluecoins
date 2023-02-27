@@ -173,20 +173,3 @@ def run_tui(db_path: str | None) -> None:
         )
 
         manager.add(window)
-
-    # def refresh_unarchive_container(conn: lite.Connection, account_name: str, account_table: Container) -> Container:
-
-    #     start_unarchive_account(None, account_name)
-
-    #     account_table._widgets.clear()
-
-    #     for account in get_archived_accounts(conn):
-
-    #         account_name = account[0]
-    #         acc = Button(
-    #             label=account_name,
-    #             onclick=partial(start_unarchive_account, account_name=account_name),
-    #         )
-    #         account_table += acc
-
-    #     return account_table

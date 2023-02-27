@@ -8,6 +8,8 @@ import click
 import xdg
 
 from cluecoins.cache import QuoteCache
+from cluecoins.database import ENCODED_LABEL_PREFIX
+from cluecoins.database import LABEL_PREFIX
 from cluecoins.database import connect_local_db
 from cluecoins.database import create_archived_account
 from cluecoins.database import delete_account
@@ -131,21 +133,21 @@ def _archive(
         account_currency = get_base_currency(conn)
         bluecoins_storage.create_account('Archive', account_currency)
 
-        # TODO: fix: NULL is written as None
+        # FIXME: NULL is written as None
         account_info_base64 = bluecoins_storage.encode_account_info(account_name)
 
         account_id = bluecoins_storage.get_account_id(account_name)
         if account_id is None:
-            return print("account is not exist")
+            return None  # account does not exist
 
         # Maybe rename to #clue_arcive_{account_name}
-        bluecoins_storage.add_label(account_id, f'clue_{account_name}')
-        bluecoins_storage.add_label(account_id, f'clue_base64_{account_info_base64}')
+        bluecoins_storage.add_label(account_id, f'{LABEL_PREFIX}{account_name}')
+        bluecoins_storage.add_label(account_id, f'{ENCODED_LABEL_PREFIX}{account_info_base64}')
 
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
         if account_archive_id is None:
-            return print("account does not exist")
+            return None  # account does not exist
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
@@ -184,7 +186,7 @@ def _unarchive(
         # get account IDs
         acc_new_id = bluecoins_storage.get_account_id(account_name)
         if acc_new_id is None:
-            return print("account is not exist")
+            return None  # account does not exist
 
         # move transactions
         for id in id_transactions:
@@ -194,8 +196,7 @@ def _unarchive(
 
             labels_list = find_labels_by_transaction_id(conn, id[0])
             for label in labels_list:
-                label_base64 = label[0][0:11]
-                if label_base64 == 'clue_base64':
+                if label[0].startswith(ENCODED_LABEL_PREFIX):
                     delete_label(conn, label[0])
 
 
