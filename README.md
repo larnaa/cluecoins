@@ -10,22 +10,18 @@
 
 A tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/), a finance manager for Android.
 
+Cluecoins can be used in two ways: by CLI or TUI.
+
 ## Installation
 
 Cluecoins is not released yet. You need to build it from sources.
 
-To manage development environment you need GNU Make and [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) installed.  
-Run `poetry build` to make a Python wheel package. Run `make` to run an entire CI pipeline: install dependencies, run linters and tests.
+To use the Cluecoins you need [Hatch](https://hatch.pypa.io/1.5/install/) installed.
 
-## Usage
+1. ```git clone https://github.com/larnaa/cluecoins.git```
+2. Run `hatch run cluecoins tui` to start work with Cluecoins.
 
-Run `cluecoins` command and follow the instructions.
-
-## Console interface
-
-You need to pull database first with **FIXME** command or manually.
-
-Perform operations on that file with `cluecoins db <filename> <command>`. For example, `cluecoins db test.fydb convert` will convert database to another base currency.
+ >Run `hatch shell` to run an entire development environment.
 
 ## Manual database backup/restore
 
