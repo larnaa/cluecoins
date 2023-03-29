@@ -49,6 +49,7 @@ class Device:
         )
 
     def push_db_root(self, db: str) -> None:
+        """Push the modified DB to Device and save the backup copy"""
 
         # TODO: add a check if file.new.fydb exists
         self.device.sync.push(f'{db}.fydb', f'/data/local/tmp/{db}.new.fydb')
