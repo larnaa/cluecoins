@@ -3,23 +3,25 @@ name = 'cluecoins'
 description = 'A CLI tool to manage the database of Bluecoins, an awesome budget planner for Android'
 license = 'MIT'
 dynamic = ['version']
-requires-python = "~=3.10'"
+requires-python = '~=3.10'
 dependencies = [
     'xdg~=5.1.1',
     'adbutils~=1.0.8',
     'click~=8.1.3',
     'requests~=2.28.1',
 ]
-authors = ['Iuliia Kornilova <github@larnaa.pw>']
-
-[tool.hatch.version]
-path = "src/cluecoins/__init__.py"
-
-[tool.hatch.build.targets.wheel]
-packages = ['src/cluecoins']
+authors = [
+  { name = 'Iuliia Kornilova', email = 'github@larnaa.pw' },
+]
 
 [project.scripts]
 cluecoins = 'cluecoins.cli:root'
+
+[tool.hatch.version]
+path = 'src/cluecoins/__init__.py'
+
+[tool.hatch.build.targets.wheel]
+packages = ['src/cluecoins']
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'
@@ -70,7 +72,7 @@ isort_ = 'isort src tests'
 black_ = 'black src tests'
 flake = 'flakeheaven lint src tests'
 mypy_ = 'mypy src tests --strict'
-test = 'pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
+test = '.venv/bin/python -m pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
 cover = 'diff-cover --compare-branch=master coverage.xml'
 
 lint = [
@@ -88,8 +90,6 @@ all = [
 
 dump-schema = 'sqlite3 bluecoins.fydb .schema > bluecoins.sql'
 
-
 [build-system]
 requires = ['hatchling']
 build-backend = 'hatchling.build'
-
