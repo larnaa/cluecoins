@@ -17,7 +17,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install Hatch
-        uses: pipx install hatch
+        uses: waylonwalker/hatch-action@v2
 
       - name: Linting and tests
         run: hatch run dev:all
