@@ -73,6 +73,7 @@ black_ = 'black src tests'
 flake = 'flakeheaven lint src tests'
 mypy_ = 'mypy src tests --strict'
 test = '.venv/bin/python -m pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
+test-ci = 'pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
 cover = 'diff-cover --compare-branch=master coverage.xml'
 
 lint = [
@@ -89,6 +90,12 @@ all = [
 ]
 
 dump-schema = 'sqlite3 bluecoins.fydb .schema > bluecoins.sql'
+
+ci = [
+    'lint',
+    'test-ci',
+    'cover',
+]
 
 [build-system]
 requires = ['hatchling']
