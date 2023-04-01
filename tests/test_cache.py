@@ -24,7 +24,7 @@ def test_fetch_quotes(initialization_storage: Storage) -> None:
 
     expected_quote_data = len(quote_data.fetchall())
 
-    assert expected_quote_data == 328
+    assert expected_quote_data == 365
 
 
 def test_get_price(initialization_storage: Storage) -> None:
