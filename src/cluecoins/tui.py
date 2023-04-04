@@ -44,22 +44,22 @@ def run_tui(db_path: str | None) -> None:
     else:
         db = db_path
 
-        def create_currency_window(manager: WindowManager) -> Window:
-            '''Create the window to choose a currency and start convert.'''
+    def create_currency_window(manager: WindowManager) -> Window:
+        '''Create the window to choose a currency and start convert.'''
 
-            # FIXME: hardcode
-            base_currency = 'USD'
-            window = Window()
+        # FIXME: hardcode
+        base_currency = 'USD'
+        window = Window()
 
-            currency_window = (
-                window
-                + ""
-                + Button(base_currency, lambda *_: start_convert(base_currency))
-                + ""
-                + Button('Back', lambda *_: manager.remove(window))
-            ).center()
+        currency_window = (
+            window
+            + ""
+            + Button(base_currency, lambda *_: start_convert(base_currency))
+            + ""
+            + Button('Back', lambda *_: manager.remove(window))
+        ).center()
 
-            return currency_window
+        return currency_window
 
     def create_account_archive_window(manager: WindowManager) -> Window:
         """Create the window to choose an account by name and start archive.
