@@ -76,7 +76,6 @@ mypy_ = 'mypy src tests --strict'
 test = '.venv/bin/python -m pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
 test-ci = 'pytest --cov-report=term-missing --cov=cluecoins --cov-report=xml -v tests'
 cover = 'diff-cover --compare-branch=master coverage.xml'
-cover-ci = "diff-cover --compare-branch `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'` coverage.xml"
 
 
 lint = [
@@ -97,7 +96,6 @@ dump-schema = 'sqlite3 bluecoins.fydb .schema > bluecoins.sql'
 ci = [
     'lint',
     'test-ci',
-    'cover-ci',
 ]
 
 [build-system]
