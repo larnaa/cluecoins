@@ -30,6 +30,8 @@ class QuoteCache:
         )
         response_json = response.json()
         for quote_date, items in response_json['rates'].items():
+            if base_currency not in items:
+                raise Exception(f'No base currency {base_currency} in response')
             for quote_currency, price in items.items():
                 self._storage.add_quote(
                     datetime.strptime(quote_date, '%Y-%m-%d'),
