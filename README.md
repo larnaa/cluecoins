@@ -5,26 +5,35 @@
 
 # cluecoins 🔍
 
-A tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/) for Android.
+<img src="https://user-images.githubusercontent.com/49699225/230795265-7bb7849a-1ffe-4468-a63c-af898c5480de.png" align="right" width="480">
 
-Now available command: 
-1. Convert the database to another main currency;
-2. Archive accounts (not stable because this command is based on labels);
-3. Unarchive accounts.
+Cluecoins is a tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/). 
+
+**Commands:**
+- `convert` - update transactions currency with data from [Exchangerate](https://api.exchangerate.host/timeseries);  
+  
+- `archive` - archive account, including all transactions  
+  (not stable, will soon be rewritten [#55](https://github.com/larnaa/cluecoins/issues/55) - move account and transactions to Cluecoins tables);  
+    
+- `unarchive` - unarchive account. 
    
-In development:
-1. Add the label to all transactions of the one account;
-2. Create a new account.
+**In development:**
+- `add-label` - add the label to all transactions of the one account;  
+
+- `create-account` - create a new account.
+
 
 ## Specifics of usage
 
 > **Pre-Release Software**
 > 
-> This project is at the pre-release stage and may contain bugs, errors and other problems. Use at your own risk and make sure to always have a database backup!
+> That is a pre-release project so it may contain bugs, errors, and other problems. Use at your own risk, and always have a database backup!
 
-1. This project is focused only on **Android** devices.
-2. You need a **rooted** device to use Cluecoins.
-3. There are two ways to use it: the terminal interface (**CLI**) and the user interface (**TUI**).
+Available two types of interfaces:
+   - **CLI** - the terminal interface;
+   - **TUI** - the graphic interface
+      TUI works only with **Android** and **rooted** devices.
+        Cluecoins need **root** for access to the directory with `bluecoins.fydb` file - the current database used by Bluecoins.
 
 ## Installation
 
@@ -34,14 +43,14 @@ In development:
 
 ## Startup
 
-1. Connect device. Don't forget to give access to the device when you start the application.
+1. Connect the device and give the PC access to it.
 2. Run Cluecoins TUI `cluecoins tui` or CLI `cluecoins cli`.
 
 ### Development mode
 
-> To manage development environment you need Hatch installed.  
+> To manage the development environment, you need to have Hatch installed. 
 
-Run `hatch shell` to run an entire development environment. Run `hatch run dev:all` to run an entire CI pipeline: start linters, tests and cover.
+Run `hatch shell` to run an entire development environment. Run `hatch run dev:all` to run an entire CI pipeline: start linters and tests.
 
 ## Manual database backup/restore (CLI)
 
@@ -49,11 +58,6 @@ Run `hatch shell` to run an entire development environment. Run `hatch run dev:a
 2. Transfer created `*.fydb` database backup file to the PC.
 3. After performing operations on that file transfer it to the smartphone. Go to *Settings -> Data Management -> Phone Storage -> Restore from phone storage*. Choose created file.
 
-
 ## Backups (TUI)
 
-You can find the backup DB in the backups directory of Bluecoins.
-
-```
-/data/user/0/com.rammigsoftware.bluecoins/databases/cluecoins-{saved_time}.fydb
-```
+Cluecoins automatically creates a backup file `backup_{namedb}.fydb` when starting.
