@@ -89,18 +89,24 @@ def _convert(base_currency: str, db_path: str) -> None:
         for date, id_, rate, currency, amount in iter_transactions(conn):
             true_rate = cache.get_price(date, base_currency, currency)
 
+            if true_rate == rate:
+                continue
+
             amount_original = amount * rate
             amount_quote = amount_original / true_rate
 
+            update_transaction(conn, id_, true_rate, amount_quote)
             click.echo(
                 f"==> transaction {id_}: {q(amount_original)} {currency} -> {q(amount_quote)} {base_currency} ({q(true_rate)} {base_currency}{currency})"
             )
 
-            update_transaction(conn, id_, true_rate, amount_quote)
-
         today = datetime.now() - timedelta(days=1)
         for id_, currency, rate in iter_accounts(conn):
             true_rate = cache.get_price(today, base_currency, currency)
+
+            if true_rate == rate:
+                continue
+
             update_account(conn, id_, true_rate)
             click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
 
