@@ -218,7 +218,7 @@ def _unarchive(
                     delete_label(conn, label[0])
 
 
-@cli.command(help='Create account with account name')
+# @cli.command(help='Create account with account name')
 @click.option('-a', '--account-name', type=str, default='Archive')
 @click.pass_context
 def create_account(
@@ -235,7 +235,7 @@ def create_account(
         bluecoins_storage.create_account(account_name, account_currency)
 
 
-@cli.command(help='Add label to all account transactions')
+# @cli.command(help='Add label to all account transactions')
 @click.option('-a', '--account-name', type=str)
 @click.option('-l', '--label-name', type=str)
 @click.pass_context

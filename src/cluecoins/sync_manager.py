@@ -34,20 +34,3 @@ class SyncManager:
         device = self.get_device()
         device.push_db_root(self.db)
         device.start_app(activity)
-
-
-class SyncManagerDB:
-    def __init__(self) -> None:
-        self.db = generate_new_db_name()
-
-    def backup(self, path: Path) -> None:
-        if not str(path).endswith('.fydb'):
-            raise Exception('wrong extension')
-
-        backup_dir = Path.home() / '.local/share/cluecoins/'
-
-        if not backup_dir.is_dir():
-            backup_dir.mkdir(parents=True, exist_ok=True)
-
-        backup_path = backup_dir / f'{self.db}.fydb'
-        shutil.copyfile(path, backup_path)
