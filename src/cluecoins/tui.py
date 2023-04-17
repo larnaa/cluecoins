@@ -6,6 +6,7 @@ from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets import Label
 from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
+from pytermgui.widgets.input_field import InputField
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
@@ -39,22 +40,30 @@ config:
 def run_tui(db_path: str | None) -> None:
 
     sync = SyncManager()
-    if not db_path:
-        db = sync.prepare_local_db()
-    else:
-        db = db_path
+
+    def get_db() -> str:
+        if not db_path:
+            return sync.prepare_local_db()
+        return db_path
 
     def create_currency_window(manager: WindowManager) -> Window:
         '''Create the window to choose a currency and start convert.'''
 
-        # FIXME: hardcode
-        base_currency = 'USD'
         window = Window()
 
+        def _start(base_currency: str) -> None:
+            tmp_window = Window().center() + Label('Please wait...')
+            manager.add(tmp_window)
+            start_convert(base_currency)
+            manager.remove(tmp_window)
+
+        currency_field = InputField(prompt='Currency: ', value='USD')
         currency_window = (
             window
             + ""
-            + Button(base_currency, lambda *_: start_convert(base_currency))
+            + currency_field
+            + ""
+            + Button('Convert', lambda *_: _start(currency_field.value))
             + ""
             + Button('Back', lambda *_: manager.remove(window))
         ).center()
@@ -67,7 +76,7 @@ def run_tui(db_path: str | None) -> None:
         Create an accounts info table.
         """
 
-        con = lite.connect(db)
+        con = lite.connect(get_db())
 
         accounts_table = Container()
 
@@ -93,7 +102,7 @@ def run_tui(db_path: str | None) -> None:
         Create an accounts info table.
         """
 
-        con = lite.connect(db)
+        con = lite.connect(get_db())
 
         unarchive_accounts_table = Container()
 
@@ -115,15 +124,15 @@ def run_tui(db_path: str | None) -> None:
 
     def start_convert(base_currency: str) -> None:
 
-        cli._convert(base_currency, db)
+        cli._convert(base_currency, get_db())
 
     def start_archive_account(button: Button, account_name: str) -> None:
 
-        cli._archive(account_name, db)
+        cli._archive(account_name, get_db())
 
     def start_unarchive_account(button: Button | None, account_name: str) -> None:
 
-        cli._unarchive(account_name, db)
+        cli._unarchive(account_name, get_db())
 
     def close_session() -> None:
         """Run app activity:

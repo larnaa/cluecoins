@@ -18,6 +18,10 @@ class QuoteCache:
     ) -> None:
         """Getting quotes from the Exchangerate API and writing them to the local database"""
 
+        latest_rates = requests.get(url='https://api.exchangerate.host/latest').json()['rates']
+        if base_currency not in latest_rates or quote_currency not in latest_rates:
+            raise Exception(f'No currency {base_currency} or {quote_currency} in response')
+
         response = requests.get(
             url='https://api.exchangerate.host/timeseries',
             params={
