@@ -49,16 +49,12 @@ class Device:
         )
 
     def push_db_root(self, db: str) -> None:
-        """Push the modified DB to Device and save the backup copy"""
-
-        # TODO: add a check if file.new.fydb exists
-        self.device.sync.push(f'{db}.fydb', f'/data/local/tmp/{db}.new.fydb')
-        # FIXME: don't use root
-        self.device.shell(f'su 0 -c mv /data/local/tmp/{db}.new.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
+        """Push the modified DB to Device"""
 
         self.device.sync.push(f'{db}.fydb', f'/data/local/tmp/{db}.fydb')
         # FIXME: don't use root
-        self.device.shell(f'su 0 -c mv /data/local/tmp/{db}.fydb /data/user/0/{APP_ID}/databases/{db}.fydb')
+        self.device.shell(f'su 0 -c mv /data/local/tmp/{db}.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
+
 
     def start_app(self, activity: str) -> None:
         self.device.shell(f'pm enable {APP_ID}')
