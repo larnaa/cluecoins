@@ -1,8 +1,10 @@
 import logging
+import subprocess
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import Optional
 
 import click
 import xdg
@@ -35,6 +37,16 @@ def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
 
 
+def backup_db(db: Optional[str]) -> None:
+
+    # TODO: add a check if backup_{db} exists
+    subprocess.run(
+        f'cp {db} backup_{db}',
+        shell=True,
+        check=True,
+    )
+
+
 @click.group()
 @click.pass_context
 def root(
@@ -51,6 +63,7 @@ def cli(ctx: click.Context, path: str) -> None:
 
     ctx.obj = {}
     ctx.obj['path'] = path
+    backup_db(path)
 
 
 # new option --db
@@ -60,6 +73,7 @@ def cli(ctx: click.Context, path: str) -> None:
 def tui(ctx: click.Context, db: str | None) -> None:
     from cluecoins.tui import run_tui
 
+    backup_db(db)
     run_tui(db)
 
 
@@ -206,7 +220,7 @@ def _unarchive(
                     delete_label(conn, label[0])
 
 
-@cli.command(help='Create account with account name')
+# @cli.command(help='Create account with account name')
 @click.option('-a', '--account-name', type=str, default='Archive')
 @click.pass_context
 def create_account(
@@ -223,7 +237,7 @@ def create_account(
         bluecoins_storage.create_account(account_name, account_currency)
 
 
-@cli.command(help='Add label to all account transactions')
+# @cli.command(help='Add label to all account transactions')
 @click.option('-a', '--account-name', type=str)
 @click.option('-l', '--label-name', type=str)
 @click.pass_context

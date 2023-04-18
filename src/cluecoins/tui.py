@@ -177,7 +177,7 @@ def run_tui(db_path: str | None) -> None:
                 + Button('Exit programm', lambda *_: close_session())
                 + ""
             )
-            .set_title("[210 bold]Bluecoins CLI")
+            .set_title("[210 bold]Cluecoins")
             .center()
         )
 

@@ -1,30 +1,18 @@
-> **Non-Affiliation Disclaimer**
->
-> This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Bluecoins](https://www.bluecoinsapp.com/) app developers. All product and company names are the registered trademarks of their original owners.
-
-
 # cluecoins 🔍
 
-A tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/) for Android.
+<img src="https://user-images.githubusercontent.com/49699225/232869534-b52f3b02-546d-4207-b0f3-7bfbebc57ca9.png" align="right" width="500">
 
-Now available command: 
-1. Convert the database to another main currency;
-2. Archive accounts (not stable because this command is based on labels);
-3. Unarchive accounts.
-   
-In development:
-1. Add the label to all transactions of the one account;
-2. Create a new account.
+Cluecoins is a tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/) via ClI or TUI. That is currently unstable. Use at your own risk, and always have a database backup!
 
-## Specifics of usage
+</br>
 
-> **Pre-Release Software**
-> 
-> This project is at the pre-release stage and may contain bugs, errors and other problems. Use at your own risk and make sure to always have a database backup!
+Available two types of interfaces:
 
-1. This project is focused only on **Android** devices.
-2. You need a **rooted** device to use Cluecoins.
-3. There are two ways to use it: the terminal interface (**CLI**) and the user interface (**TUI**).
+- **CLI** - the terminal interface;
+- **TUI** - the graphic interface  
+    TUI works only with **Android** and **rooted** devices. Cluecoins need **root** for access to the directory with `bluecoins.fydb` file - the current database used by Bluecoins.
+
+</br>
 
 ## Installation
 
@@ -32,16 +20,31 @@ In development:
 2. Go to the directory `cd cluecoins`
 3. Install `pip install -e .`
 
-## Startup
+## Usage
 
-1. Connect device. Don't forget to give access to the device when you start the application.
+1. Connect the device and give the PC access to it.
 2. Run Cluecoins TUI `cluecoins tui` or CLI `cluecoins cli`.
 
 ### Development mode
 
-> To manage development environment you need Hatch installed.  
+> Installing Hatch would help you manage the development environment more easily.
 
-Run `hatch shell` to run an entire development environment. Run `hatch run dev:all` to run an entire CI pipeline: start linters, tests and cover.
+To run an entire development environment, use `hatch shell`. To run an entire CI pipeline and start linters and tests, use `hatch run dev:all`.
+
+## Commands CLI
+
+- `convert` - update transactions currency with data from [Exchangerate](https://api.exchangerate.host/timeseries);  
+  
+- `archive` - archive account, including all transactions  
+  (not stable, will soon be rewritten [#55](https://github.com/larnaa/cluecoins/issues/55) - move account and transactions to Cluecoins tables);  
+
+- `unarchive` - unarchive account.
+
+**In development:**
+
+- `add-label` - add the label to all transactions of the one account;  
+
+- `create-account` - create a new account.
 
 ## Manual database backup/restore (CLI)
 
@@ -49,11 +52,12 @@ Run `hatch shell` to run an entire development environment. Run `hatch run dev:a
 2. Transfer created `*.fydb` database backup file to the PC.
 3. After performing operations on that file transfer it to the smartphone. Go to *Settings -> Data Management -> Phone Storage -> Restore from phone storage*. Choose created file.
 
+## Backups
 
-## Backups (TUI)
+Cluecoins automatically creates a backup file `backup_{namedb}.fydb` when starting.
 
-You can find the backup DB in the backups directory of Bluecoins.
+---
 
-```
-/data/user/0/com.rammigsoftware.bluecoins/databases/cluecoins-{saved_time}.fydb
-```
+> **Non-Affiliation Disclaimer**
+>
+> This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Bluecoins](https://www.bluecoinsapp.com/) app developers. All product and company names are the registered trademarks of their original owners.

@@ -211,7 +211,7 @@ def delete_label(conn: Connection, label_name: str) -> None:
     )
 
 
-def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list[list[str]]:
+def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list[tuple[str]]:
     labels = conn.cursor().execute(
         'SELECT labelName FROM LABELSTABLE WHERE transactionIDLabels = ?',
         (transaction_id,),
