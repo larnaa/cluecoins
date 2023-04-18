@@ -1,36 +1,18 @@
-> **Non-Affiliation Disclaimer**
->
-> This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Bluecoins](https://www.bluecoinsapp.com/) app developers. All product and company names are the registered trademarks of their original owners.
-
 # cluecoins 🔍
 
 <img src="https://user-images.githubusercontent.com/49699225/232869534-b52f3b02-546d-4207-b0f3-7bfbebc57ca9.png" align="right" width="500">
 
-Cluecoins is a tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/).
+Cluecoins is a tool to manage the database of [Bluecoins](https://www.bluecoinsapp.com/) via ClI or TUI. That is currently unstable. Use at your own risk, and always have a database backup!
 
-<br/>
-
-- [Specifics of usage](#specifics-of-usage)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Development mode](#development-mode)
-- [Commands CLI](#commands-cli)
-- [Manual database backup/restore (CLI)](#manual-database-backuprestore-cli)
-- [Backups](#backups)
-
-<br/> <br/> <br/>
-
-## Specifics of usage
-
-> **Pre-Release Software**
->
-> That is a pre-release project so it may contain bugs, errors, and other problems. Use at your own risk, and always have a database backup!
+</br>
 
 Available two types of interfaces:
 
 - **CLI** - the terminal interface;
 - **TUI** - the graphic interface  
     TUI works only with **Android** and **rooted** devices. Cluecoins need **root** for access to the directory with `bluecoins.fydb` file - the current database used by Bluecoins.
+
+</br>
 
 ## Installation
 
@@ -73,3 +55,9 @@ To run an entire development environment, use `hatch shell`. To run an entire CI
 ## Backups
 
 Cluecoins automatically creates a backup file `backup_{namedb}.fydb` when starting.
+
+---
+
+> **Non-Affiliation Disclaimer**
+>
+> This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Bluecoins](https://www.bluecoinsapp.com/) app developers. All product and company names are the registered trademarks of their original owners.
