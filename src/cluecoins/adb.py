@@ -55,7 +55,6 @@ class Device:
         # FIXME: don't use root
         self.device.shell(f'su 0 -c mv /data/local/tmp/{db}.fydb /data/user/0/{APP_ID}/databases/bluecoins.fydb')
 
-
     def start_app(self, activity: str) -> None:
         self.device.shell(f'pm enable {APP_ID}')
         self.device.app_start(APP_ID, activity)

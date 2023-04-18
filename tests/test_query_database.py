@@ -5,8 +5,10 @@ from sqlite3 import Connection
 from cluecoins.database import add_label_to_transaction
 from cluecoins.database import create_new_account
 from cluecoins.database import delete_account
+from cluecoins.database import delete_label
 from cluecoins.database import find_account
 from cluecoins.database import find_account_transactions_id
+from cluecoins.database import find_labels_by_transaction_id
 from cluecoins.database import get_accounts_list
 from cluecoins.database import get_base_currency
 from cluecoins.database import iter_accounts
@@ -15,8 +17,6 @@ from cluecoins.database import move_transactions_to_account
 from cluecoins.database import set_base_currency
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
-from cluecoins.database import delete_label
-from cluecoins.database import find_labels_by_transaction_id
 
 
 def test_set_base_currency(conn: Connection) -> None:
@@ -156,10 +156,14 @@ def test_delete_label(conn: Connection) -> None:
 
     delete_label(conn, 'Family')
 
-    label = conn.cursor().execute(
-        'SELECT * FROM LABELSTABLE WHERE labelName = ?',
-        ('Family',),
-    ).fetchall()
+    label = (
+        conn.cursor()
+        .execute(
+            'SELECT * FROM LABELSTABLE WHERE labelName = ?',
+            ('Family',),
+        )
+        .fetchall()
+    )
 
     assert label == []
 

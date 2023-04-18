@@ -1,6 +1,3 @@
-import shutil
-from pathlib import Path
-
 from cluecoins.adb import Device
 from cluecoins.adb import generate_new_db_name
 

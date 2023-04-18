@@ -1,9 +1,10 @@
 import logging
+import subprocess
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
-import subprocess
+from typing import Optional
 
 import click
 import xdg
@@ -35,7 +36,8 @@ logging.basicConfig(level=logging.DEBUG)
 def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
 
-def backup_db(db: str) -> None:
+
+def backup_db(db: Optional[str]) -> None:
 
     # TODO: add a check if backup_{db} exists
     subprocess.run(
