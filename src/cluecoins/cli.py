@@ -5,6 +5,7 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional
+import re
 
 import click
 import xdg
@@ -275,86 +276,92 @@ def add_label(
         bluecoins_storage.add_label(account_id, label_name)
 
 
-import re
-import sqlite3
-
-# from pathlib import Path
-
-
 def archive_v3(account_name: str) -> None:
 
-    # temporary connect
+    # will delete
+    import sqlite3
     conn = sqlite3.connect("Blue_1_copy.fydb")
 
-    path = Path.cwd() / 'schema.sql'
-    schema = path.read_text()
-    print(schema)
-
-    # groceries = [line for line in content.splitlines() if line.startswith("*")]
-    # print("\n".join(groceries))
-
     # write schema in variable like str
-    # sql_file = open('schema.sql', 'r')
-    # schema = sql_file.read()
-    # sql_file.close()
+    path = Path(__file__).parent.parent.parent / 'bluecoins.sql'
+    schema = path.read_text()
 
     # get schema
-    query_list = schema.split('\n')
+    query_list = schema.split(';')
 
     # check existence account
     account = conn.cursor().execute(
-        'SELECT acoountName FROM ACCOUNTTABLE WHERE accountName = ?;',
+        'SELECT accountName FROM ACCOUNTSTABLE WHERE accountName = ?;',
         (account_name,),
     )
     if account.fetchall() is None:
         print("account doesn't exist")  # error
 
-    # create table if not exist
-    necessary_table_list = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+    # create tables if not exist
+    necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
 
-    for table in necessary_table_list:
+    for table in necessary_tables:
         for query in query_list:
-            # sort: find 'CREATE TABLE'
-            regex = 'CREATE (\w*)'
-            create_index = re.search(regex, query)
-            index = create_index.group(1)
-            if index != 'INDEX':
-                # create clue table if not exist
-                clue_table = f'CLUE{table}'
-                regex = 'CREATE TABLE (\w*)'
-                part_of_blue_query = re.search(regex, query).group(0)
-                if re.search(regex, query).group(1) == table:
-                    clue_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS {clue_table}')
-                    # create table
-                    conn.cursor().execute(clue_table_query)
+            clue_table = f'CLUE{table}'
 
-        account_id = conn.cursor().execute(
-            'SELECT accountsTableID FROM ACCOUNTSTABLE WHERE accountName = ?',
-            (account_name,),
-        )
+            regex = 'CREATE TABLE (\w*)'
+            re_query = re.search(regex, query)
+            if re_query is None:
+                continue
+            part_of_blue_query = re_query.group(0)
+            print(table, re_query.group(1))
+            if re_query.group(1) == table:
+                clue_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS {clue_table}')
+                # create table
+                conn.cursor().execute(clue_table_query)
 
-        # move account
+    # get account id
+    account_id = conn.cursor().execute(
+        'SELECT accountsTableID FROM ACCOUNTSTABLE WHERE accountName = ?',
+        (account_name,),
+    ).fetchall()[0][0]
+
+    # move account
+    conn.cursor().execute(
+        'INSERT INTO CLUEACCOUNTSTABLE SELECT * FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
+        (account_id,),
+    )
+    conn.cursor().execute(
+        'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
+        (account_id,),
+    )
+
+    # get transactions list
+    transactions = conn.cursor().execute(
+        'SELECT transactionsTableID FROM TRANSACTIONSTABLE',
+    )
+    transactions_list = transactions.fetchall()
+
+    # move transactions
+    for transaction_id in transactions_list:
+        transaction_id = transaction_id[0]
+        print(transaction_id)
         conn.cursor().execute(
-            'INSERT INTO CLUEACCOUNTSTABLE SELECT * FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
-            (account_id,),
+            'INSERT INTO CLUETRANSACTIONSTABLE SELECT * FROM TRANSACTIONSTABLE WHERE transactionsTableID = ?',
+            (transaction_id,),
+        )
+        conn.cursor().execute(
+            'DELETE FROM TRANSACTIONSTABLE WHERE transactionsTableID = ?',
+            (transaction_id,),
         )
 
-        # get transactions list
-        transactions = conn.cursor().execute(
-            'SELECT transactionsTableID FROM TRANSACTIONSTABLE',
+    # move labels
+    for transaction_id in transactions_list:
+        print(transaction_id)
+        conn.cursor().execute(
+            'INSERT INTO CLUELABELSTABLE SELECT * FROM LABELSTABLE WHERE transactionIDLabels = ?',
+            (transaction_id,),
         )
-        transactions_list = transactions.fetchall()
+        conn.cursor().execute(
+            'DELETE FROM LABELSTABLE WHERE transactionIDLabels = ?',
+            (transaction_id,),
+        )
+    
+    conn.commit()
 
-        # move transactions
-        for transaction_id in transactions_list:
-            conn.cursor().execute(
-                'INSERT INTO CLUETRANSACTIONSTABLE SELECT * FROM TRANSACTIONSTABLE WHERE transactionsTableID = ?',
-                (transaction_id,),
-            )
-
-        # move labels
-        for transaction_id in transactions_list:
-            conn.cursor().execute(
-                'INSERT INTO CLUELABELSTABLE SELECT * FROM LABELSTABLE WHERE transactionIDLabels = ?',
-                (transaction_id,),
-            )
+archive_v3('Visa')
