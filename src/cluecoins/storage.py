@@ -1,4 +1,5 @@
 import base64
+import re
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -150,3 +151,42 @@ class BluecoinsStorage:
         account_info_list.pop(0)
         account_info = tuple(account_info_list)
         return account_info
+
+    def create_clue_tables(self, necessary_tables: list[str]) -> None:
+        """Create CLUE tables, if does not exist"""
+
+        # write schema in variable like str
+        path = Path(__file__).parent / 'bluecoins.sql'
+        schema = path.read_text()
+
+        # get schema
+        query_list = schema.split(';')
+
+        for query in query_list:
+
+            regex = 'CREATE TABLE (\w*)'
+
+            re_query = re.search(regex, query)
+            if re_query is None:  # check: CREATE TABLE or CREATE INDEX
+                continue
+
+            table_blue = re_query.group(1)  # from Bluecoins DB
+            if table_blue not in necessary_tables:  # check: included table from Bluecoins DB in necessary_tables
+                continue
+            part_of_blue_query = re_query.group(0)
+
+            clue_table = f'CLUE_{table_blue}'
+
+            clue_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS {clue_table}')
+            # create table
+            db.execute_command(self.conn, clue_table_query)
+
+    def move_to_clue_table_by_id(self, blue_id: int, table_blue: str, id_name: str) -> None:
+        """Create and execute queries:
+        1. query insert for moving data from Bluecoins to Cluecoins table by id
+        2. query delete data from Bluecoins table"""
+
+        db.execute_command(
+            self.conn, f'INSERT INTO CLUE_{table_blue} SELECT * FROM {table_blue} WHERE {id_name}={blue_id}'
+        )
+        db.execute_command(self.conn, f'DELETE FROM {table_blue} WHERE {id_name}={blue_id}')
