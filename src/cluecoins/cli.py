@@ -159,7 +159,7 @@ def _archive(
 
         account_id = bluecoins_storage.get_account_id(account_name)
         if account_id is None:
-            return None  # account does not exist
+            return None  # account does not exist -> exception
 
         # Maybe rename to #clue_arcive_{account_name}
         bluecoins_storage.add_label(account_id, f'{LABEL_PREFIX}{account_name}')
@@ -168,27 +168,10 @@ def _archive(
         # move transactions to account Archive
         account_archive_id = bluecoins_storage.get_account_id('Archive')
         if account_archive_id is None:
-            return None  # account does not exist
+            return None  # account does not exist ->  -> exception
         move_transactions_to_account(conn, account_id, account_archive_id)
 
         delete_account(conn, account_id)
-
-
-def _archive_v2(
-    account_name: str,
-    db_path: str,
-) -> None:
-
-    conn = connect_local_db(db_path)
-
-    with transaction(conn) as conn:
-
-        # create_cluecoins_table(conn, ...)
-
-        # check by name - account exist or not
-        # create cluecoins tables
-        # move data (account, transactions, lables (?) from bluecoins table to cluecoins table
-        ...
 
 
 @cli.command(help='Unarchive account')
@@ -224,7 +207,7 @@ def _unarchive(
         # get account IDs
         acc_new_id = bluecoins_storage.get_account_id(account_name)
         if acc_new_id is None:
-            return None  # account does not exist
+            return None  # account does not exist -> exception
 
         # move transactions
         for id in id_transactions:
@@ -276,92 +259,116 @@ def add_label(
         bluecoins_storage.add_label(account_id, label_name)
 
 
-def archive_v3(account_name: str) -> None:
+@cli.command(help='Archive account')
+@click.option('-a', '--account-name', type=str)
+@click.pass_context
+def archive_v2(
+    ctx: click.Context,
+    account_name: str,
+) -> None:
+    """Archive with CLI (manual DB selection)."""
 
-    # will delete
-    import sqlite3
-    conn = sqlite3.connect("Blue_1_copy.fydb")
+    _archive_v2(account_name, ctx.obj['path'])
 
-    # write schema in variable like str
-    path = Path(__file__).parent.parent.parent / 'bluecoins.sql'
-    schema = path.read_text()
 
-    # get schema
-    query_list = schema.split(';')
+def _archive_v2(
+    account_name: str,
+    db_path: str,
+) -> None:
 
-    # check existence account
-    account = conn.cursor().execute(
-        'SELECT accountName FROM ACCOUNTSTABLE WHERE accountName = ?;',
-        (account_name,),
-    )
-    if account.fetchall() is None:
-        print("account doesn't exist")  # error
+    conn = connect_local_db(db_path)
 
-    # create tables if not exist
-    necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+    bluecoins_storage = BluecoinsStorage(conn)
 
-    for table in necessary_tables:
+    with transaction(conn) as conn:
+
+        # write schema in variable like str
+        path = Path(__file__).parent / 'bluecoins.sql'
+        schema = path.read_text()
+
+        # get schema
+        query_list = schema.split(';')
+
+        # check existence account
+        account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return None  # account does not exist -> exception
+        
+        # create tables if not exist
+        necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+
         for query in query_list:
-            clue_table = f'CLUE{table}'
 
             regex = 'CREATE TABLE (\w*)'
+            
             re_query = re.search(regex, query)
-            if re_query is None:
+            if re_query is None: # check: CREATE TABLE or CREATE INDEX
+                continue
+
+            table_blue = re_query.group(1) # from Bluecoins DB
+            if table_blue not in necessary_tables: # check: included table from Bluecoins DB in necessary_tables
                 continue
             part_of_blue_query = re_query.group(0)
-            print(table, re_query.group(1))
-            if re_query.group(1) == table:
-                clue_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS {clue_table}')
-                # create table
-                conn.cursor().execute(clue_table_query)
+            
+            clue_table = f'CLUE_{table_blue}'
+            
+            clue_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS {clue_table}')
+            # create table
+            conn.cursor().execute(clue_table_query)
 
-    # get account id
-    account_id = conn.cursor().execute(
-        'SELECT accountsTableID FROM ACCOUNTSTABLE WHERE accountName = ?',
-        (account_name,),
-    ).fetchall()[0][0]
-
-    # move account
-    conn.cursor().execute(
-        'INSERT INTO CLUEACCOUNTSTABLE SELECT * FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
-        (account_id,),
-    )
-    conn.cursor().execute(
-        'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
-        (account_id,),
-    )
-
-    # get transactions list
-    transactions = conn.cursor().execute(
-        'SELECT transactionsTableID FROM TRANSACTIONSTABLE',
-    )
-    transactions_list = transactions.fetchall()
-
-    # move transactions
-    for transaction_id in transactions_list:
-        transaction_id = transaction_id[0]
-        print(transaction_id)
+        # move account
         conn.cursor().execute(
-            'INSERT INTO CLUETRANSACTIONSTABLE SELECT * FROM TRANSACTIONSTABLE WHERE transactionsTableID = ?',
-            (transaction_id,),
+            'INSERT INTO CLUE_ACCOUNTSTABLE SELECT * FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
+            (account_id,),
         )
         conn.cursor().execute(
-            'DELETE FROM TRANSACTIONSTABLE WHERE transactionsTableID = ?',
-            (transaction_id,),
+            'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
+            (account_id,),
         )
 
-    # move labels
-    for transaction_id in transactions_list:
-        print(transaction_id)
-        conn.cursor().execute(
-            'INSERT INTO CLUELABELSTABLE SELECT * FROM LABELSTABLE WHERE transactionIDLabels = ?',
-            (transaction_id,),
+        # get transactions list
+        transactions = conn.cursor().execute(
+            'SELECT transactionsTableID FROM TRANSACTIONSTABLE ',
         )
-        conn.cursor().execute(
-            'DELETE FROM LABELSTABLE WHERE transactionIDLabels = ?',
-            (transaction_id,),
-        )
-    
-    conn.commit()
+        transactions_list = transactions.fetchall()
 
-archive_v3('Visa')
+        # move transactions
+        # for transaction_id in transactions_list:
+        #     transaction_id = transaction_id[0]
+        conn.cursor().execute(
+            'INSERT INTO CLUE_TRANSACTIONSTABLE SELECT * FROM TRANSACTIONSTABLE WHERE accountID = ?',
+            (account_id,),
+        )
+        conn.cursor().execute(
+            'DELETE FROM TRANSACTIONSTABLE WHERE accountID = ?',
+            (account_id,),
+        )
+
+        # move labels
+        for transaction_id in transactions_list:
+            conn.cursor().execute(
+                'INSERT INTO CLUE_LABELSTABLE SELECT * FROM LABELSTABLE WHERE transactionIDLabels = ?',
+                (transaction_id[0],),
+            )
+            conn.cursor().execute(
+                'DELETE FROM LABELSTABLE WHERE transactionIDLabels = ?',
+                (transaction_id[0],),
+            )
+
+        # create_cluecoins_table(conn, ...)
+
+        # check by name - account exist or not
+        # create cluecoins tables
+        # move data (account, transactions, lables (?) from bluecoins table to cluecoins table
+        ...
+
+_archive_v2('Sberbank', "Bluecoins_db_6copy.fydb")
+
+'''
+import sqlite3
+
+cursor = conn.cursor()
+list_of_tables_names = cursor.execute("SELECT name FROM sqlite_master;") # tables names
+list_of_queries = cursor.execute("SELECT sql FROM sqlite_master;") # queries
+
+'''
