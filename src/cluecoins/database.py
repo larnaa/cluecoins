@@ -219,6 +219,17 @@ def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list
     return labels.fetchall()
 
 
+# def move_to_clue_table_by_id(conn: Connection, blue_id: int, table_blue: str, id_name: str) -> None:
+#     conn.cursor().execute(
+#         'INSERT INTO CLUE:table SELECT * FROM ? WHERE ?=?',
+#         (table_blue, table_blue, id_name, blue_id,),
+#     )
+#     conn.cursor().execute(
+#         'DELETE FROM ? WHERE ? = ?',
+#         (table_blue, id_name, blue_id,),
+#     )
+
+
 def get_transactions_list(conn: Connection, account_id: int) -> list[tuple[int]]:
     transactions = conn.cursor().execute(
         'SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE accountID = ?',
@@ -229,3 +240,21 @@ def get_transactions_list(conn: Connection, account_id: int) -> list[tuple[int]]
 
 def execute_command(conn: Connection, command: str) -> None:
     conn.cursor().execute(command)
+
+
+def copy_to_clue_table_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
+    query = 'INSERT INTO {table_blue} SELECT * FROM {table_blue} WHERE {blue_id_name} = {blue_id}'
+    conn.cursor().execute(
+        query,
+        (
+            table_blue,
+            table_blue,
+            blue_id_name,
+            blue_id,
+        ),
+    )
+
+
+def delete_data_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
+    query = 'DELETE FROM %s WHERE %s=%s'
+    conn.cursor().execute(query, (table_blue, blue_id_name, blue_id))

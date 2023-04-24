@@ -296,12 +296,12 @@ def _archive_v2(
 
         transactions_list = get_transactions_list(conn, account_id)
         for transaction_id in transactions_list:
-            bluecoins_storage.move_to_clue_table_by_id(transaction_id[0], 'LABELSTABLE', 'transactionIDLabels')
+            bluecoins_storage.move_to_clue_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0])
 
-        bluecoins_storage.move_to_clue_table_by_id(account_id, 'TRANSACTIONSTABLE', 'accountID')
+        bluecoins_storage.move_to_clue_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id)
 
         # NOTE: what do if account already exist in CLUE_ACCOUNTSTABLE?
-        bluecoins_storage.move_to_clue_table_by_id(account_id, 'ACCOUNTSTABLE', 'accountsTableID')
+        bluecoins_storage.move_to_clue_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id)
 
 
 _archive_v2('Sberbank', "Bluecoins_db_6copy.fydb")
