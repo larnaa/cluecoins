@@ -30,3 +30,20 @@ def conn() -> Iterable[Connection]:
     conn.executescript(sql)
 
     yield conn
+
+
+@pytest.fixture
+def create_clue_tables(conn: Connection) -> None:
+    blue_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+
+    for table in blue_tables:
+        query: str = (
+            conn.cursor()
+            .execute(
+                'SELECT sql FROM sqlite_master WHERE name= ?',
+                (table,),
+            )
+            .fetchone()[0]
+        )
+        clue_query = query.replace(table, f'CLUE_{table}')
+        conn.executescript(clue_query)
