@@ -6,6 +6,7 @@ from cluecoins.database import add_label_to_transaction
 from cluecoins.database import copy_to_clue_table_by_id
 from cluecoins.database import create_new_account
 from cluecoins.database import delete_account
+from cluecoins.database import delete_data_by_id
 from cluecoins.database import delete_label
 from cluecoins.database import find_account
 from cluecoins.database import find_account_transactions_id
@@ -177,6 +178,7 @@ def test_find_labels_by_id(conn: Connection) -> None:
 
 
 def test_copy_to_clue(conn: Connection, create_clue_tables: None) -> None:
+
     account_id = (
         conn.cursor()
         .execute(
@@ -187,12 +189,28 @@ def test_copy_to_clue(conn: Connection, create_clue_tables: None) -> None:
 
     copy_to_clue_table_by_id(conn, 'ACCOUNTSTABLE', 'accountsTableID', account_id)
 
-    account_clue_id = (
+    expected_account_clue_id = (
         conn.cursor()
         .execute(
-            'SELECT * FROM CLUEACCOUNTSTABLE WHERE accountName = "Visa"',
+            'SELECT * FROM CLUE_ACCOUNTSTABLE WHERE accountName = "Visa"',
         )
         .fetchone()[0]
     )
 
-    assert account_id == account_clue_id
+    assert expected_account_clue_id == account_id
+
+
+def test_delete_account_by_id(conn: Connection) -> None:
+    # TODO: write tests delete transactions/lables by id
+
+    delete_data_by_id(conn, 'ACCOUNTSTABLE', 'accountsTableID', 2)
+
+    expected_resulte = (
+        conn.cursor()
+        .execute(
+            'SELECT * FROM ACCOUNTSTABLE WHERE accountsTableID = 2',
+        )
+        .fetchall()
+    )
+
+    assert expected_resulte == []

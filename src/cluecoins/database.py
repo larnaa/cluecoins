@@ -243,18 +243,8 @@ def execute_command(conn: Connection, command: str) -> None:
 
 
 def copy_to_clue_table_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
-    query = 'INSERT INTO {table_blue} SELECT * FROM {table_blue} WHERE {blue_id_name} = {blue_id}'
-    conn.cursor().execute(
-        query,
-        (
-            table_blue,
-            table_blue,
-            blue_id_name,
-            blue_id,
-        ),
-    )
+    conn.cursor().execute(f'INSERT INTO CLUE_{table_blue} SELECT * FROM {table_blue} WHERE {blue_id_name} = {blue_id}')
 
 
 def delete_data_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
-    query = 'DELETE FROM %s WHERE %s=%s'
-    conn.cursor().execute(query, (table_blue, blue_id_name, blue_id))
+    conn.cursor().execute(f'DELETE FROM {table_blue} WHERE {blue_id_name}={blue_id}')

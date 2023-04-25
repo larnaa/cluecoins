@@ -11,10 +11,8 @@ import xdg
 
 from cluecoins.cache import QuoteCache
 from cluecoins.database import ENCODED_LABEL_PREFIX
-from cluecoins.database import LABEL_PREFIX
 from cluecoins.database import connect_local_db
 from cluecoins.database import create_archived_account
-from cluecoins.database import delete_account
 from cluecoins.database import delete_label
 from cluecoins.database import find_labels_by_transaction_id
 from cluecoins.database import find_transactions_by_label
@@ -22,7 +20,6 @@ from cluecoins.database import get_base_currency
 from cluecoins.database import get_transactions_list
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
-from cluecoins.database import move_transactions_to_account
 from cluecoins.database import move_transactions_to_account_with_id
 from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
@@ -144,6 +141,10 @@ def _archive(
     account_name: str,
     db_path: str,
 ) -> None:
+    """Archive account:
+    1. Create CLUE tables, if doesn't exist: 'CLUE_ACCOUNTSTABLE', 'CLUE_TRANSACTIONSTABLE', 'CLUE_LABELSTABLE'
+    2. Move the account, transactions, and labels to CLUE tables.
+    """
 
     conn = connect_local_db(db_path)
 
@@ -151,27 +152,22 @@ def _archive(
 
     with transaction(conn) as conn:
 
-        account_currency = get_base_currency(conn)
-        bluecoins_storage.create_account('Archive', account_currency)
-
-        # FIXME: NULL is written as None
-        account_info_base64 = bluecoins_storage.encode_account_info(account_name)
-
         account_id = bluecoins_storage.get_account_id(account_name)
         if account_id is None:
-            return None  # account does not exist -> exception
+            raise Exception(f'Account {account_name} does not exist')
 
-        # Maybe rename to #clue_arcive_{account_name}
-        bluecoins_storage.add_label(account_id, f'{LABEL_PREFIX}{account_name}')
-        bluecoins_storage.add_label(account_id, f'{ENCODED_LABEL_PREFIX}{account_info_base64}')
+        necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+        bluecoins_storage.create_clue_tables(necessary_tables)
 
-        # move transactions to account Archive
-        account_archive_id = bluecoins_storage.get_account_id('Archive')
-        if account_archive_id is None:
-            return None  # account does not exist ->  -> exception
-        move_transactions_to_account(conn, account_id, account_archive_id)
+        transactions_list = get_transactions_list(conn, account_id)
+        for transaction_id in transactions_list:
+            bluecoins_storage.move_to_clue_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0])
 
-        delete_account(conn, account_id)
+        bluecoins_storage.move_to_clue_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id)
+
+        # NOTE: what to do if account already exist in CLUE_ACCOUNTSTABLE?
+        # If account exist - add _2 in the end name of account
+        bluecoins_storage.move_to_clue_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id)
 
 
 @cli.command(help='Unarchive account')
@@ -207,7 +203,7 @@ def _unarchive(
         # get account IDs
         acc_new_id = bluecoins_storage.get_account_id(account_name)
         if acc_new_id is None:
-            return None  # account does not exist -> exception
+            raise Exception(f'Account {account_name} does not exist')
 
         # move transactions
         for id in id_transactions:
@@ -257,51 +253,3 @@ def add_label(
         if account_id is None:
             return print("account is not exist")
         bluecoins_storage.add_label(account_id, label_name)
-
-
-@cli.command(help='Archive account')
-@click.option('-a', '--account-name', type=str)
-@click.pass_context
-def archive_v2(
-    ctx: click.Context,
-    account_name: str,
-) -> None:
-    """Archive with CLI (manual DB selection)."""
-
-    _archive_v2(account_name, ctx.obj['path'])
-
-
-def _archive_v2(
-    account_name: str,
-    db_path: str,
-) -> None:
-    """Archive account:
-    1. Create CLUE tables, if doesn't exist: 'CLUE_ACCOUNTSTABLE', 'CLUE_TRANSACTIONSTABLE', 'CLUE_LABELSTABLE'
-    2. Move the account, transactions, and labels to CLUE tables.
-    """
-
-    conn = connect_local_db(db_path)
-
-    bluecoins_storage = BluecoinsStorage(conn)
-
-    with transaction(conn) as conn:
-
-        # check existence account
-        account_id = bluecoins_storage.get_account_id(account_name)
-        if account_id is None:
-            return None  # account does not exist -> exception
-
-        necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
-        bluecoins_storage.create_clue_tables(necessary_tables)
-
-        transactions_list = get_transactions_list(conn, account_id)
-        for transaction_id in transactions_list:
-            bluecoins_storage.move_to_clue_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0])
-
-        bluecoins_storage.move_to_clue_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id)
-
-        # NOTE: what do if account already exist in CLUE_ACCOUNTSTABLE?
-        bluecoins_storage.move_to_clue_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id)
-
-
-_archive_v2('Sberbank', "Bluecoins_db_6copy.fydb")
