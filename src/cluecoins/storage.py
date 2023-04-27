@@ -70,8 +70,8 @@ class BluecoinsStorage:
             return True
         return False
 
-    def get_account_id(self, account_name: str) -> int | None:
-        account_info = db.find_account(self.conn, account_name)
+    def get_account_id(self, account_name: str, revert: bool = False) -> int | None:
+        account_info = db.find_account(self.conn, account_name, revert)
         if account_info is not None:
             return int(account_info[0])
         return None
@@ -155,6 +155,7 @@ class BluecoinsStorage:
     def create_clue_tables(self, necessary_tables: list[str]) -> None:
         """Create CLUE tables if not exists"""
 
+        # TODO: get table from currently Bluecoins DB 
         path = Path(__file__).parent / 'bluecoins.sql'
         schema = path.read_text()
         queries = schema.split(';')
@@ -175,6 +176,7 @@ class BluecoinsStorage:
             create_table_query = query.replace(part_of_blue_query, f'CREATE TABLE IF NOT EXISTS CLUE_{table_blue}')
             db.execute_command(self.conn, create_table_query)
 
-    def move_to_clue_table_by_id(self, table_blue: str, blue_id_name: str, blue_id: int) -> None:
-        db.copy_to_clue_table_by_id(self.conn, table_blue, blue_id_name, blue_id)
-        db.delete_data_by_id(self.conn, table_blue, blue_id_name, blue_id)
+    def move_data_to_table_by_id(self, table: str, filter: str, filter_id: int, revert: bool = False) -> None:
+        db.copy_data_to_table_by_id(self.conn, table, filter, filter_id, revert)
+        db.delete_data_by_id(self.conn, table, filter, filter_id, revert)
+

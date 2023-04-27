@@ -71,10 +71,14 @@ def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     )
 
 
-def find_account(conn: Connection, account_name: str) -> Any:
+def find_account(conn: Connection, account_name: str, revert: bool = False) -> Any:
+    table = 'ACCOUNTSTABLE'
+
+    if revert:
+        table = f'CLUE_{table}'
+
     account = conn.cursor().execute(
-        'SELECT * FROM ACCOUNTSTABLE WHERE accountName = ?',
-        (account_name,),
+        f'SELECT * FROM {table} WHERE accountName = {account_name}',
     )
     return account.fetchone()
 
@@ -242,9 +246,17 @@ def execute_command(conn: Connection, command: str) -> None:
     conn.cursor().execute(command)
 
 
-def copy_to_clue_table_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
-    conn.cursor().execute(f'INSERT INTO CLUE_{table_blue} SELECT * FROM {table_blue} WHERE {blue_id_name} = {blue_id}')
+def copy_data_to_table_by_id(conn: Connection, table: str, filter: str, id_: int, revert: bool = False) -> None:
+    if revert is False:
+        new_table = f'CLUE_{table}'
+    else:
+        new_table = table
+        table = f'CLUE_{table}'
+
+    conn.cursor().execute(f'INSERT INTO {new_table} SELECT * FROM {table} WHERE {filter} = {id_}')
 
 
-def delete_data_by_id(conn: Connection, table_blue: str, blue_id_name: str, blue_id: int) -> None:
-    conn.cursor().execute(f'DELETE FROM {table_blue} WHERE {blue_id_name}={blue_id}')
+def delete_data_by_id(conn: Connection, table: str, filter: str, id_: int, revert: bool = False) -> None:
+    if revert:
+        table = f'CLUE_{table}'
+    conn.cursor().execute(f'DELETE FROM {table} WHERE {filter} = {id_}')

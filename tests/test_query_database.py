@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlite3 import Connection
 
 from cluecoins.database import add_label_to_transaction
-from cluecoins.database import copy_to_clue_table_by_id
+from cluecoins.database import copy_data_to_table_by_id
 from cluecoins.database import create_new_account
 from cluecoins.database import delete_account
 from cluecoins.database import delete_data_by_id
@@ -187,7 +187,7 @@ def test_copy_to_clue(conn: Connection, create_clue_tables: None) -> None:
         .fetchone()[0]
     )
 
-    copy_to_clue_table_by_id(conn, 'ACCOUNTSTABLE', 'accountsTableID', account_id)
+    copy_data_to_table_by_id(conn, 'ACCOUNTSTABLE', 'accountsTableID', account_id)
 
     expected_account_clue_id = (
         conn.cursor()
