@@ -261,15 +261,15 @@ def add_label(
 @click.pass_context
 def unarchive_v2(
     ctx: click.Context,
-    account: str,
+    account_name: str,
 ) -> None:
     """Unarchive with CLI (manual DB selection)."""
 
-    _unarchive_v2(account, ctx.obj['path'])
+    _unarchive_v2(account_name, ctx.obj['path'])
 
 
 def _unarchive_v2(
-    account: str,
+    account_name: str,
     db_path: str,
 ) -> None:
     """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins Tables """
@@ -280,13 +280,13 @@ def _unarchive_v2(
     
     with transaction(conn) as conn:
 
-        account_id = bluecoins_storage.get_account_id(account, True)
+        account_id = bluecoins_storage.get_account_id(account_name, True)
         if account_id is None:
-            raise Exception(f'Account {account} does not exist')
+            raise Exception(f'Account {account_name} does not exist')
 
-        transactions_list = get_transactions_list(conn, account_id)
+        transactions_list = get_transactions_list(conn, account_id, True)
         for transaction_id in transactions_list:
-            bluecoins_storage.move_data_to_table_by_id('LABELSSTABLE', 'transactionIDLabels', transaction_id[0], True)
+            bluecoins_storage.move_data_to_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0], True)
 
         bluecoins_storage.move_data_to_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id, True)
 

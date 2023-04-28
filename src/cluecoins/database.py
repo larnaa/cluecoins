@@ -78,7 +78,7 @@ def find_account(conn: Connection, account_name: str, revert: bool = False) -> A
         table = f'CLUE_{table}'
 
     account = conn.cursor().execute(
-        f'SELECT * FROM {table} WHERE accountName = {account_name}',
+        f'SELECT * FROM {table} WHERE accountName = "{account_name}"',
     )
     return account.fetchone()
 
@@ -234,10 +234,14 @@ def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list
 #     )
 
 
-def get_transactions_list(conn: Connection, account_id: int) -> list[tuple[int]]:
+def get_transactions_list(conn: Connection, account_id: int, revert: bool = False) -> list[tuple[int]]:
+    table = 'TRANSACTIONSTABLE'
+
+    if revert:
+        table = f'CLUE_{table}'
+
     transactions = conn.cursor().execute(
-        'SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE accountID = ?',
-        (account_id,),
+        f'SELECT transactionsTableID FROM {table} WHERE accountID = {account_id}',
     )
     return transactions.fetchall()
 
