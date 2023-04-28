@@ -10,17 +10,11 @@ import click
 import xdg
 
 from cluecoins.cache import QuoteCache
-from cluecoins.database import ENCODED_LABEL_PREFIX
 from cluecoins.database import connect_local_db
-from cluecoins.database import create_archived_account
-from cluecoins.database import delete_label
-from cluecoins.database import find_labels_by_transaction_id
-from cluecoins.database import find_transactions_by_label
 from cluecoins.database import get_base_currency
 from cluecoins.database import get_transactions_list
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
-from cluecoins.database import move_transactions_to_account_with_id
 from cluecoins.database import set_base_currency
 from cluecoins.database import transaction
 from cluecoins.database import update_account
@@ -186,6 +180,7 @@ def _unarchive(
     account_name: str,
     db_path: str,
 ) -> None:
+    """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins tables"""
 
     conn = connect_local_db(db_path)
 
@@ -193,28 +188,19 @@ def _unarchive(
 
     with transaction(conn) as conn:
 
-        # create account
-        account_info = bluecoins_storage.decode_account_info(account_name)
-        create_archived_account(conn, account_info)
-
-        label_name = 'clue_' + account_name
-        id_transactions = find_transactions_by_label(conn, label_name)
-
-        # get account IDs
-        acc_new_id = bluecoins_storage.get_account_id(account_name)
-        if acc_new_id is None:
+        account_id = bluecoins_storage.get_account_id(account_name, True)
+        if account_id is None:
             raise Exception(f'Account {account_name} does not exist')
 
-        # move transactions
-        for id in id_transactions:
-            move_transactions_to_account_with_id(conn, id[0], acc_new_id)
+        transactions_list = get_transactions_list(conn, account_id, True)
+        for transaction_id in transactions_list:
+            bluecoins_storage.move_data_to_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0], True)
 
-            delete_label(conn, label_name)
+        bluecoins_storage.move_data_to_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id, True)
 
-            labels_list = find_labels_by_transaction_id(conn, id[0])
-            for label in labels_list:
-                if label[0].startswith(ENCODED_LABEL_PREFIX):
-                    delete_label(conn, label[0])
+        # NOTE: what to do if account already exist in CLUE_ACCOUNTSTABLE?
+        # If account exist - add _2 in the end name of account
+        bluecoins_storage.move_data_to_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id, True)
 
 
 # @cli.command(help='Create account with account name')
@@ -253,43 +239,3 @@ def add_label(
         if account_id is None:
             return print("account is not exist")
         bluecoins_storage.add_label(account_id, label_name)
-
-
-
-@cli.command(help='Unarchive account v2')
-@click.option('-a', '--account-name', type=str)
-@click.pass_context
-def unarchive_v2(
-    ctx: click.Context,
-    account_name: str,
-) -> None:
-    """Unarchive with CLI (manual DB selection)."""
-
-    _unarchive_v2(account_name, ctx.obj['path'])
-
-
-def _unarchive_v2(
-    account_name: str,
-    db_path: str,
-) -> None:
-    """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins Tables """
-
-    conn = connect_local_db(db_path)
-        
-    bluecoins_storage = BluecoinsStorage(conn)
-    
-    with transaction(conn) as conn:
-
-        account_id = bluecoins_storage.get_account_id(account_name, True)
-        if account_id is None:
-            raise Exception(f'Account {account_name} does not exist')
-
-        transactions_list = get_transactions_list(conn, account_id, True)
-        for transaction_id in transactions_list:
-            bluecoins_storage.move_data_to_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0], True)
-
-        bluecoins_storage.move_data_to_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id, True)
-
-        # NOTE: what to do if account already exist in CLUE_ACCOUNTSTABLE?
-        # If account exist - add _2 in the end name of account
-        bluecoins_storage.move_data_to_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id, True)

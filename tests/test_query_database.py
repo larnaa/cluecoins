@@ -15,7 +15,6 @@ from cluecoins.database import get_accounts_list
 from cluecoins.database import get_base_currency
 from cluecoins.database import iter_accounts
 from cluecoins.database import iter_transactions
-from cluecoins.database import move_transactions_to_account
 from cluecoins.database import set_base_currency
 from cluecoins.database import update_account
 from cluecoins.database import update_transaction
@@ -139,19 +138,6 @@ def test_update_transaction(conn: Connection) -> None:
     expected_update_data_tuple = update_data_tuple.fetchone()
 
     assert expected_update_data_tuple == (10.0, 1000000)
-
-
-def test_move_transactions_to_account(conn: Connection) -> None:
-
-    move_transactions_to_account(conn, 4, 5)
-
-    transactions_list = conn.cursor().execute(
-        'SELECT * FROM TRANSACTIONSTABLE WHERE accountID = ?',
-        (5,),
-    )
-    expected_transactions_list = len(transactions_list.fetchall())
-
-    assert expected_transactions_list == 292
 
 
 def test_delete_label(conn: Connection) -> None:
