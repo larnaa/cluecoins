@@ -12,7 +12,6 @@ from pytermgui.window_manager.window import Window
 
 import cluecoins.cli as cli
 from cluecoins.database import get_accounts_list
-from cluecoins.database import get_archived_accounts
 from cluecoins.sync_manager import SyncManager
 
 PYTERMGUI_CONFIG = """
@@ -102,11 +101,11 @@ def run_tui(db_path: str | None) -> None:
         Create an accounts info table.
         """
 
-        con = lite.connect(get_db())
+        conn = lite.connect(get_db())
 
         unarchive_accounts_table = Container()
 
-        for account in get_archived_accounts(con):
+        for account in get_accounts_list(conn, clue=True):
             account_name = account[0]
             acc = Button(
                 label=account_name,
