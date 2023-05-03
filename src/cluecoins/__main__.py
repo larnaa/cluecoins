@@ -1,4 +1,4 @@
-from cluecoins.cli import root
+from cluecoins.cli import cli
 
 if __name__ == '__main__':
-    root(prog_name='cluecoins', standalone_mode=False)
+    cli(prog_name='cluecoins', standalone_mode=False)
