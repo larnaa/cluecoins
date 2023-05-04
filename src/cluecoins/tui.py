@@ -41,6 +41,7 @@ class TUI:
         self._is_local = bool(db_path)
         self._db = db_path
         self._sync = SyncManager()
+        self.manager = WindowManager()
 
     @property
     def db(self) -> str:
@@ -53,7 +54,7 @@ class TUI:
         with YamlLoader() as loader:
             loader.load(PYTERMGUI_CONFIG)
 
-        with WindowManager() as manager:
+        with self.manager:
             """Create the generic main aplication window."""
 
             main_window = (
@@ -68,11 +69,11 @@ class TUI:
                         box="EMPTY_VERTICAL",
                     ),
                     "",
-                    Button('Convert', lambda *_: manager.add(self.create_currency_window(manager))),
+                    Button('Convert', lambda *_: self.manager.add(self.create_currency_window(self.manager))),
                     "",
-                    Button('Archive', lambda *_: manager.add(self.create_account_archive_window(manager))),
+                    Button('Archive', lambda *_: self.manager.add(self.create_account_archive_window(self.manager))),
                     "",
-                    Button('Unarchive', lambda *_: manager.add(self.create_account_unarchive_window(manager))),
+                    Button('Unarchive', lambda *_: self.manager.add(self.create_account_unarchive_window(self.manager))),
                     "",
                     Button('Exit programm', lambda *_: self.close_session()),
                     "",
@@ -83,17 +84,17 @@ class TUI:
                 .center()
             )
 
-            manager.add(main_window)
+            self.manager.add(main_window)
 
-    def create_currency_window(self, manager: WindowManager) -> Window:
+    def create_currency_window(self) -> Window:
         '''Create the window to choose a currency and start convert.'''
 
         def _start(base_currency: str) -> None:
             tmp_window = Window().center() + Label('Please wait...')
-            manager.add(tmp_window)
+            self.manager.add(tmp_window)
 
             self.start_convert(base_currency)
-            manager.remove(tmp_window)
+            self.manager.remove(tmp_window)
 
         value = 'USD'
         currency_window = Window(
@@ -101,12 +102,12 @@ class TUI:
             "",
             Button('Convert', lambda *_: _start(value)),
             "",
-            Button('Back', lambda *_: manager.remove(currency_window)),
+            Button('Back', lambda *_: self.manager.remove(currency_window)),
         ).center()
 
         return currency_window
 
-    def create_account_archive_window(self, manager: WindowManager) -> Window:
+    def create_account_archive_window(self) -> Window:
         """Create the window to choose an account by name and start archive.
 
         Create an accounts info table.
@@ -124,12 +125,12 @@ class TUI:
         archive_window = Window(
             accounts_table,
             "",
-            Button('Back', lambda *_: manager.remove(archive_window)),
+            Button('Back', lambda *_: self.manager.remove(archive_window)),
         ).center()
 
         return archive_window
 
-    def create_account_unarchive_window(self, manager: WindowManager) -> Window:
+    def create_account_unarchive_window(self) -> Window:
         """Create the window to choose an account by name and start unarchive.
 
         Create an accounts info table.
@@ -150,12 +151,12 @@ class TUI:
         unarchive_window = Window(
             unarchive_accounts_table,
             "",
-            Button('Back', lambda *_: manager.remove(unarchive_window)),
+            Button('Back', lambda *_: self.manager.remove(unarchive_window)),
             box="HEAVY",
         ).center()
 
         return unarchive_window
-
+    
     def start_convert(self, base_currency: str) -> None:
 
         actions.convert(base_currency, self.db)
