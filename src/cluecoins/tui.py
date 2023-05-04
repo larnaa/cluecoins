@@ -71,11 +71,13 @@ class TUI:
                         box="EMPTY_VERTICAL",
                     ),
                     "",
-                    Button('Convert', lambda *_: self.manager.add(self.create_sync_local_window())),
+                    Button('Convert', lambda *_: self.manager.add(self.create_currency_window())),
                     "",
                     Button('Archive', lambda *_: self.manager.add(self.create_account_archive_window())),
                     "",
                     Button('Unarchive', lambda *_: self.manager.add(self.create_account_unarchive_window())),
+                    "",
+                    Button('Sync', lambda *_: self.manager.add(self.create_sync_source_window())),
                     "",
                     Button('Exit programm', lambda *_: self.close_session()),
                     "",
@@ -100,7 +102,7 @@ class TUI:
 
         return source_window
 
-    def create_sync_local_window(self) -> Window:
+    def create_sync_local_window(self) -> None:
         files_list = Container(overflow=Overflow.SCROLL, height=10)
         files_list.set_widgets([])
 
@@ -118,10 +120,30 @@ class TUI:
             Button('Back', lambda *_: self.manager.remove(sync_local_window)),
         ).center()
 
-        return sync_local_window
+        self.manager.add(sync_local_window)
+        sync_local_window.focus()
 
-    def create_sync_device_window(self) -> Window:
-        raise NotImplementedError
+    def create_sync_device_window(self) -> None:
+        from adbutils import adb  # type: ignore[import]
+
+        devices_list = Container(overflow=Overflow.SCROLL, height=10)
+        devices_list.set_widgets([])
+
+        adb_diveces_list = adb.device_list()
+
+        for device in adb_diveces_list:
+            button = Button(str(device), lambda *_: ...)
+
+            devices_list += button
+
+        device_window = Window(
+            'Choos device',
+            devices_list,
+            Button('Back', lambda *_: self.manager.remove(device_window)),
+        ).center()
+
+        self.manager.add(device_window)
+        device_window.focus()
 
     def create_currency_window(self) -> Window:
         '''Create the window to choose a currency and start convert.'''
