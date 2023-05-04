@@ -48,6 +48,43 @@ class TUI:
             self._db = self._sync.prepare_local_db()
         return self._db
 
+    def run_tui(self) -> None:
+
+        with YamlLoader() as loader:
+            loader.load(PYTERMGUI_CONFIG)
+
+        with WindowManager() as manager:
+            """Create the generic main aplication window."""
+
+            main_window = (
+                Window(
+                    Label(
+                        "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                    ),
+                    "",
+                    Container(
+                        "In development:",
+                        Label("- archive"),
+                        box="EMPTY_VERTICAL",
+                    ),
+                    "",
+                    Button('Convert', lambda *_: manager.add(self.create_currency_window(manager))),
+                    "",
+                    Button('Archive', lambda *_: manager.add(self.create_account_archive_window(manager))),
+                    "",
+                    Button('Unarchive', lambda *_: manager.add(self.create_account_unarchive_window(manager))),
+                    "",
+                    Button('Exit programm', lambda *_: self.close_session()),
+                    "",
+                    width=60,
+                    box="DOUBLE",
+                )
+                .set_title("[210 bold]Cluecoins")
+                .center()
+            )
+
+            manager.add(main_window)
+
     def create_currency_window(self, manager: WindowManager) -> Window:
         '''Create the window to choose a currency and start convert.'''
 
@@ -142,40 +179,3 @@ class TUI:
             # FIXME: hardcode
             self._sync.push_changes_to_app('.ui.activities.main.MainActivity')
         sys.exit(0)
-
-    def run_tui(self) -> None:
-
-        with YamlLoader() as loader:
-            loader.load(PYTERMGUI_CONFIG)
-
-        with WindowManager() as manager:
-            """Create the generic main aplication window."""
-
-            main_window = (
-                Window(
-                    Label(
-                        "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                    ),
-                    "",
-                    Container(
-                        "In development:",
-                        Label("- archive"),
-                        box="EMPTY_VERTICAL",
-                    ),
-                    "",
-                    Button('Convert', lambda *_: manager.add(self.create_currency_window(manager))),
-                    "",
-                    Button('Archive', lambda *_: manager.add(self.create_account_archive_window(manager))),
-                    "",
-                    Button('Unarchive', lambda *_: manager.add(self.create_account_unarchive_window(manager))),
-                    "",
-                    Button('Exit programm', lambda *_: self.close_session()),
-                    "",
-                    width=60,
-                    box="DOUBLE",
-                )
-                .set_title("[210 bold]Cluecoins")
-                .center()
-            )
-
-            manager.add(main_window)
