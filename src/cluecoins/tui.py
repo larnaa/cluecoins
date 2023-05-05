@@ -2,6 +2,7 @@ import sqlite3 as lite
 import sys
 from functools import partial
 from pathlib import Path
+from sqlite3 import Connection
 
 from pytermgui.enums import Overflow
 from pytermgui.file_loaders import YamlLoader
@@ -9,6 +10,7 @@ from pytermgui.widgets import Label
 from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
 from pytermgui.widgets.input_field import InputField
+from pytermgui.window_manager.layouts import Layout
 from pytermgui.window_manager.manager import WindowManager
 from pytermgui.window_manager.window import Window
 
@@ -38,12 +40,21 @@ config:
 """
 
 
+def _define_layout() -> Layout:
+
+    layout = Layout()
+    layout.add_slot("Body")
+
+    return layout
+
+
 class TUI:
     def __init__(self, db_path: str | None) -> None:
-        self._is_local = bool(db_path)
         self._db = db_path
         self._sync = SyncManager()
         self.manager = WindowManager()
+        self._is_local = bool(db_path)
+        self._conn = None
 
     @property
     def db(self) -> str:
@@ -51,7 +62,15 @@ class TUI:
             self._db = self._sync.prepare_local_db()
         return self._db
 
+    @property
+    def conn(self) -> Connection:
+        if self._conn is None:
+            self._conn = lite.connect(self.db)
+        return self._conn
+
     def run_tui(self) -> None:
+
+        self.manager.layout = _define_layout()
 
         with YamlLoader() as loader:
             loader.load(PYTERMGUI_CONFIG)
@@ -88,7 +107,10 @@ class TUI:
                 .center()
             )
 
-            self.manager.add(main_window)
+            self.manager.add(
+                main_window,
+                assign="body",
+            )
 
     def create_sync_source_window(self) -> Window:
 
@@ -98,6 +120,8 @@ class TUI:
             Button('Local file', lambda *_: self.create_sync_local_window()),
             "",
             Button('Device', lambda *_: self.create_sync_device_window()),
+            "",
+            Button('Back', lambda *_: self.manager.remove(source_window)),
         ).center()
 
         return source_window
@@ -107,10 +131,23 @@ class TUI:
         files_list.set_widgets([])
 
         current_dir = Path.cwd()
-        files = current_dir.glob('*')
+
+        directories: list[Path] = [current_dir.parent]
+        files: list[Path] = []
+
+        for path in current_dir.glob('*'):
+            if path.is_dir():
+                directories.append(path)
+            elif path.name.endswith('.fydb'):
+                files.append(path)
+
+        for dir in directories:
+            button = Button('🌚 ' + dir.name, lambda *_: ...)
+
+            files_list += button
 
         for file in files:
-            button = Button(str(file), lambda *_: ...)
+            button = Button('🌝 ' + str(file.name), lambda *_: ...)
 
             files_list += button
 
@@ -167,19 +204,10 @@ class TUI:
         return currency_window
 
     def create_account_archive_window(self) -> Window:
-        """Create the window to choose an account by name and start archive.
-
-        Create an accounts info table.
-        """
-
-        conn = lite.connect(self.db)
+        """Create the window to choose an account by name and start archive."""
 
         accounts_table = Container(overflow=Overflow.SCROLL, height=15)
-
-        for account in get_accounts_list(conn):
-            account_name = account[0]
-            acc = Button(account_name, partial(self.start_archive_account, account_name=account_name))
-            accounts_table += acc
+        self._update_accounts_table(accounts_table)
 
         archive_window = Window(
             accounts_table,
@@ -190,31 +218,46 @@ class TUI:
         return archive_window
 
     def create_account_unarchive_window(self) -> Window:
-        """Create the window to choose an account by name and start unarchive.
+        """Create the window to choose an account by name and start unarchive."""
 
-        Create an accounts info table.
-        """
-
-        conn = lite.connect(self.db)
-
-        unarchive_accounts_table = Container()
-
-        for account in get_accounts_list(conn, clue=True):
-            account_name = account[0]
-            acc = Button(
-                label=account_name,
-                onclick=partial(self.start_unarchive_account, account_name=account_name),
-            )
-            unarchive_accounts_table += acc
+        archive_accounts_table = Container(overflow=Overflow.SCROLL, height=15)
+        self._update_accounts_table(archive_accounts_table, clue=True)
 
         unarchive_window = Window(
-            unarchive_accounts_table,
+            archive_accounts_table,
             "",
             Button('Back', lambda *_: self.manager.remove(unarchive_window)),
             box="HEAVY",
         ).center()
 
         return unarchive_window
+
+    def _update_accounts_table(self, accounts_table: Container, clue: bool = False) -> None:
+        """Refresh the account_table Container:
+        1. Clear the Container.
+        2. Fill the container with an (updated) list of accounts from the connected DB.
+
+        Flag CLUE:
+            False:
+                Work with account archiving.
+            True:
+                Work with account unarchiving."""
+
+        accounts_table.set_widgets([])
+
+        func = self.start_archive_account
+        if clue is True:
+            func = self.start_unarchive_account
+
+        for account in get_accounts_list(self.conn, clue):
+            account_name = account[0]
+
+            acc = Button(
+                label=account_name,
+                onclick=partial(func, account_name=account_name),
+            )
+
+            accounts_table += acc
 
     def start_convert(self, base_currency: str) -> None:
 
@@ -223,10 +266,12 @@ class TUI:
     def start_archive_account(self, button: Button, account_name: str) -> None:
 
         actions.archive(account_name, self.db)
+        self._update_accounts_table(button.parent)
 
     def start_unarchive_account(self, button: Button, account_name: str) -> None:
 
         actions.unarchive(account_name, self.db)
+        self._update_accounts_table(button.parent, clue=True)
 
     def close_session(self) -> None:
         """Run app activity:
@@ -234,6 +279,8 @@ class TUI:
 
         Close terminal interface.
         """
+
+        self.conn.close()
 
         if not self._is_local:
             # FIXME: hardcode
