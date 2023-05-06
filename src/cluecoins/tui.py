@@ -4,6 +4,8 @@ from functools import partial
 from pathlib import Path
 from sqlite3 import Connection
 
+from pytermgui import Widget
+from pytermgui.enums import HorizontalAlignment
 from pytermgui.enums import Overflow
 from pytermgui.file_loaders import YamlLoader
 from pytermgui.widgets import Label
@@ -128,28 +130,8 @@ class TUI:
 
     def create_sync_local_window(self) -> None:
         files_list = Container(overflow=Overflow.SCROLL, height=10)
-        files_list.set_widgets([])
-
         current_dir = Path.cwd()
-
-        directories: list[Path] = [current_dir.parent]
-        files: list[Path] = []
-
-        for path in current_dir.glob('*'):
-            if path.is_dir():
-                directories.append(path)
-            elif path.name.endswith('.fydb'):
-                files.append(path)
-
-        for dir in directories:
-            button = Button('🌚 ' + dir.name, lambda *_: ...)
-
-            files_list += button
-
-        for file in files:
-            button = Button('🌝 ' + str(file.name), lambda *_: ...)
-
-            files_list += button
+        self._update_files_list(files_list, current_dir)
 
         sync_local_window = Window(
             'Choos database',
@@ -160,6 +142,46 @@ class TUI:
         self.manager.add(sync_local_window)
         sync_local_window.focus()
 
+    def _update_files_list(self, files_list: Container, current_dir: Path) -> None:
+        """1. Create button 'back to parent directory.'
+        2. Clear the Container + add the 'back to parent directory' button.
+        3. Sort by directory and *.fydb files, and create buttons.
+        4. Fill files_list."""
+
+        # add check, if current_dir is home
+        back_directory = Button(
+            label='/..',
+            onclick=partial(self.change_dir, path=current_dir.parents[0]),
+            parent_align=HorizontalAlignment.LEFT,
+        )
+
+        files_list.set_widgets([back_directory])
+
+        files = current_dir.iterdir()
+        for dir in files:
+            if dir.is_dir():
+                button = Button(
+                    label='/' + dir.name,
+                    onclick=partial(self.change_dir, path=dir),
+                    parent_align=HorizontalAlignment.LEFT,
+                )
+                files_list += button
+
+        files_fydb = current_dir.glob('*.fydb')
+        for file in files_fydb:
+            button = Button(
+                label='/' + file.name,
+                onclick=partial(self.connect_to_local_db),
+                parent_align=HorizontalAlignment.LEFT,
+            )
+            files_list += button
+
+    def change_dir(self, button: Button, path: Path) -> None:
+        self._update_files_list(button.parent, path)
+
+    def connect_to_local_db(self, button: Button) -> None:
+        ...
+
     def create_sync_device_window(self) -> None:
         from adbutils import adb  # type: ignore[import]
 
@@ -169,7 +191,11 @@ class TUI:
         adb_diveces_list = adb.device_list()
 
         for device in adb_diveces_list:
-            button = Button(str(device), lambda *_: ...)
+            button = Button(
+                str(device),
+                lambda *_: ...,
+                parent_align=HorizontalAlignment.LEFT,
+            )
 
             devices_list += button
 
@@ -255,6 +281,7 @@ class TUI:
             acc = Button(
                 label=account_name,
                 onclick=partial(func, account_name=account_name),
+                parent_align=HorizontalAlignment.LEFT,
             )
 
             accounts_table += acc
