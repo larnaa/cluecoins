@@ -24,7 +24,7 @@ class SyncManager:
             self.device = Device.connect()
         return self.device
 
-    def prepare_local_db(self) -> str:
+    def prepare_remote_db(self) -> str:
         device = self.get_device()
         device.stop_app()
         device.pull_db(self.db)

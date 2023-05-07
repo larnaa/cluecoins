@@ -4,10 +4,10 @@ from functools import partial
 from pathlib import Path
 from sqlite3 import Connection
 
-from pytermgui import Widget
 from pytermgui.enums import HorizontalAlignment
 from pytermgui.enums import Overflow
 from pytermgui.file_loaders import YamlLoader
+from pytermgui.input import keys
 from pytermgui.widgets import Label
 from pytermgui.widgets.button import Button
 from pytermgui.widgets.containers import Container
@@ -46,6 +46,7 @@ def _define_layout() -> Layout:
 
     layout = Layout()
     layout.add_slot("Body")
+    layout.add_slot("Body right", width=0.2)
 
     return layout
 
@@ -74,69 +75,82 @@ class TUI:
 
         self.manager.layout = _define_layout()
 
+        self.manager.bind(
+            keys.RIGHT,
+            lambda *_: {
+                self.manager.focus(source_window),  # type: ignore
+            },
+        )
+
+        self.manager.bind(
+            keys.LEFT,
+            lambda *_: {
+                self.manager.focus(main_window),  # type: ignore
+            },
+        )
+
         with YamlLoader() as loader:
             loader.load(PYTERMGUI_CONFIG)
 
         with self.manager:
             """Create the generic main aplication window."""
-
-            main_window = (
-                Window(
-                    Label(
-                        "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
-                    ),
-                    "",
-                    Container(
-                        "In development:",
-                        Label("- archive"),
-                        box="EMPTY_VERTICAL",
-                    ),
-                    "",
-                    Button('Convert', lambda *_: self.manager.add(self.create_currency_window())),
-                    "",
-                    Button('Archive', lambda *_: self.manager.add(self.create_account_archive_window())),
-                    "",
-                    Button('Unarchive', lambda *_: self.manager.add(self.create_account_unarchive_window())),
-                    "",
-                    Button('Sync', lambda *_: self.manager.add(self.create_sync_source_window())),
-                    "",
-                    Button('Exit programm', lambda *_: self.close_session()),
-                    "",
-                    width=60,
-                    box="DOUBLE",
-                )
-                .set_title("[210 bold]Cluecoins")
-                .center()
+            source_window = Window(
+                "Choose type of synchronization",
+                "",
+                Button('Local file', lambda *_: self.create_sync_local_window()),
+                "",
+                Button('Device', lambda *_: self.create_sync_device_window()),
+                "",
+                box="DOUBLE",
             )
+
+            self.manager.add(
+                source_window,
+                assign="body_right",
+            )
+
+            main_window = Window(
+                Label(
+                    "A CLI tool to manage the database of Bluecoins,\nan awesome budget planner for Android.",
+                ),
+                "",
+                Container(
+                    "In development:",
+                    Label("- archive"),
+                    box="EMPTY_VERTICAL",
+                ),
+                "",
+                Button('Convert', lambda *_: self.manager.add(self.create_currency_window())),
+                "",
+                Button('Archive', lambda *_: self.manager.add(self.create_account_archive_window())),
+                "",
+                Button('Unarchive', lambda *_: self.manager.add(self.create_account_unarchive_window())),
+                "",
+                Button('Exit programm', lambda *_: self.close_session()),
+                "",
+                box="DOUBLE",
+            ).set_title("[210 bold]Cluecoins")
 
             self.manager.add(
                 main_window,
                 assign="body",
             )
 
-    def create_sync_source_window(self) -> Window:
-
-        source_window = Window(
-            "Choose type of synchronization",
-            "",
-            Button('Local file', lambda *_: self.create_sync_local_window()),
-            "",
-            Button('Device', lambda *_: self.create_sync_device_window()),
-            "",
-            Button('Back', lambda *_: self.manager.remove(source_window)),
-        ).center()
-
-        return source_window
-
     def create_sync_local_window(self) -> None:
         files_list = Container(overflow=Overflow.SCROLL, height=10)
         current_dir = Path.cwd()
+
+        current_path = Container(
+            heigh=2,
+        )
+        current_path.set_widgets(['Current directory:\n' + str(current_dir)])
         self._update_files_list(files_list, current_dir)
 
         sync_local_window = Window(
             'Choos database',
             files_list,
-            Button('Back', lambda *_: self.manager.remove(sync_local_window)),
+            current_path,
+            Button('Back', lambda *_: sync_local_window.close()),
         ).center()
 
         self.manager.add(sync_local_window)
@@ -148,14 +162,14 @@ class TUI:
         3. Sort by directory and *.fydb files, and create buttons.
         4. Fill files_list."""
 
-        # add check, if current_dir is home
-        back_directory = Button(
-            label='/..',
-            onclick=partial(self.change_dir, path=current_dir.parents[0]),
-            parent_align=HorizontalAlignment.LEFT,
-        )
-
-        files_list.set_widgets([back_directory])
+        files_list.set_widgets([])
+        if current_dir != Path('/'):
+            back_directory = Button(
+                label='/..',
+                onclick=partial(self.change_dir, path=current_dir.parents[0]),
+                parent_align=HorizontalAlignment.LEFT,
+            )
+            files_list.set_widgets([back_directory])
 
         files = current_dir.iterdir()
         for dir in files:
@@ -177,6 +191,7 @@ class TUI:
             files_list += button
 
     def change_dir(self, button: Button, path: Path) -> None:
+        # current_path.set_widgets(['Current directory:\n' + str(path)])
         self._update_files_list(button.parent, path)
 
     def connect_to_local_db(self, button: Button) -> None:
@@ -202,7 +217,7 @@ class TUI:
         device_window = Window(
             'Choos device',
             devices_list,
-            Button('Back', lambda *_: self.manager.remove(device_window)),
+            Button('Back', lambda *_: device_window.close()),
         ).center()
 
         self.manager.add(device_window)
@@ -216,7 +231,7 @@ class TUI:
             self.manager.add(tmp_window)
 
             self.start_convert(base_currency)
-            self.manager.remove(tmp_window)
+            tmp_window.close()
 
         value = 'USD'
         currency_window = Window(
@@ -224,7 +239,7 @@ class TUI:
             "",
             Button('Convert', lambda *_: _start(value)),
             "",
-            Button('Back', lambda *_: self.manager.remove(currency_window)),
+            Button('Back', lambda *_: currency_window.close()),
         ).center()
 
         return currency_window
@@ -238,7 +253,7 @@ class TUI:
         archive_window = Window(
             accounts_table,
             "",
-            Button('Back', lambda *_: self.manager.remove(archive_window)),
+            Button('Back', lambda *_: archive_window.close()),
         ).center()
 
         return archive_window
@@ -252,7 +267,7 @@ class TUI:
         unarchive_window = Window(
             archive_accounts_table,
             "",
-            Button('Back', lambda *_: self.manager.remove(unarchive_window)),
+            Button('Back', lambda *_: unarchive_window.close()),
             box="HEAVY",
         ).center()
 
