@@ -9,9 +9,6 @@ from sqlite3 import connect
 from typing import Any
 from typing import Iterator
 
-LABEL_PREFIX = 'clue_'
-ENCODED_LABEL_PREFIX = 'clue_base64_'
-
 
 def connect_local_db(path: str) -> Connection:
     if not path.endswith('.fydb'):
@@ -71,21 +68,27 @@ def update_account(conn: Connection, id_: int, rate: Decimal) -> None:
     )
 
 
-def find_account(conn: Connection, account_name: str, revert: bool = False) -> Any:
+def find_account(conn: Connection, account_name: str, clue: bool = False) -> Any:
     table = 'ACCOUNTSTABLE'
 
-    if revert:
+    if clue:
         table = f'CLUE_{table}'
 
     account = conn.cursor().execute(
-        f'SELECT * FROM {table} WHERE accountName = {account_name}',
+        f'SELECT * FROM {table} WHERE accountName = ?',
+        (account_name,),
     )
     return account.fetchone()
 
 
-def get_accounts_list(conn: Connection) -> list[Any]:
+def get_accounts_list(conn: Connection, clue: bool = False) -> list[Any]:
+    table = 'ACCOUNTSTABLE'
+
+    if clue:
+        table = f'CLUE_{table}'
+
     account = conn.cursor().execute(
-        'SELECT accountName, accountConversionRateNew FROM ACCOUNTSTABLE',
+        f'SELECT accountName, accountConversionRateNew FROM {table}',
     )
     return account.fetchall()
 
@@ -118,59 +121,6 @@ def create_new_account(conn: Connection, account_name: str, account_currency: st
     )
 
 
-def create_archived_account(conn: Connection, account_info: tuple[Any, ...]) -> None:
-
-    (
-        account_name,
-        account_type_id,
-        account_hidden,
-        account_currency,
-        account_conversion_rate_new,
-        currency_changed,
-        credit_limit,
-        cut_off_da,
-        credit_card_due_date,
-        cash_based_accounts,
-        account_selector_visibility,
-        accounts_extra_column_int1,
-        accounts_extra_column_int2,
-        accounts_extra_column_string1,
-        accounts_extra_column_string2,
-    ) = account_info
-    conn.execute(
-        'INSERT INTO ACCOUNTSTABLE(accountName, accountTypeID, accountHidden, accountCurrency, accountConversionRateNew, currencyChanged, creditLimit, cutOffDa, creditCardDueDate, cashBasedAccounts, accountSelectorVisibility, accountsExtraColumnInt1, accountsExtraColumnInt2, accountsExtraColumnString1, accountsExtraColumnString2) \
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        (
-            account_name,
-            account_type_id,
-            account_hidden,
-            account_currency,
-            account_conversion_rate_new,
-            currency_changed,
-            credit_limit,
-            cut_off_da,
-            credit_card_due_date,
-            cash_based_accounts,
-            account_selector_visibility,
-            accounts_extra_column_int1,
-            accounts_extra_column_int2,
-            accounts_extra_column_string1,
-            accounts_extra_column_string2,
-        ),
-    )
-
-
-def move_transactions_to_account(conn: Connection, account_id_old: int, account_id_new: int) -> None:
-    conn.execute(
-        'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE accountID = ?',
-        (account_id_new, account_id_old),
-    )
-    conn.execute(
-        'UPDATE TRANSACTIONSTABLE SET accountPairID = ? WHERE accountPairID = ?',
-        (account_id_new, account_id_old),
-    )
-
-
 def delete_account(conn: Connection, account_id: int) -> None:
     conn.execute(
         'DELETE FROM ACCOUNTSTABLE WHERE accountsTableID = ?',
@@ -184,28 +134,6 @@ def find_transactions_by_label(conn: Connection, label_name: str) -> list[tuple[
         (label_name,),
     )
     return transactions.fetchall()
-
-
-def get_archived_accounts(conn: Connection) -> list[Any]:  # change Any
-    accounts = conn.cursor().execute(
-        f"SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
-            WHERE labelName LIKE '{LABEL_PREFIX}%' \
-            EXCEPT \
-            SELECT DISTINCT substr(labelName, 6) FROM LABELSTABLE \
-            WHERE labelName LIKE '{ENCODED_LABEL_PREFIX}%';"
-    )
-    return accounts.fetchall()
-
-
-def move_transactions_to_account_with_id(conn: Connection, transaction_id: int, acc_new_id: int) -> None:
-    conn.execute(
-        'UPDATE TRANSACTIONSTABLE SET accountID = ? WHERE transactionsTableID = ?',
-        (acc_new_id, transaction_id),
-    )
-    conn.execute(
-        'UPDATE TRANSACTIONSTABLE SET accountPairID = ? WHERE transactionsTableID = ?',
-        (acc_new_id, transaction_id),
-    )
 
 
 def delete_label(conn: Connection, label_name: str) -> None:
@@ -223,21 +151,14 @@ def find_labels_by_transaction_id(conn: Connection, transaction_id: int) -> list
     return labels.fetchall()
 
 
-# def move_to_clue_table_by_id(conn: Connection, blue_id: int, table_blue: str, id_name: str) -> None:
-#     conn.cursor().execute(
-#         'INSERT INTO CLUE:table SELECT * FROM ? WHERE ?=?',
-#         (table_blue, table_blue, id_name, blue_id,),
-#     )
-#     conn.cursor().execute(
-#         'DELETE FROM ? WHERE ? = ?',
-#         (table_blue, id_name, blue_id,),
-#     )
+def get_transactions_list(conn: Connection, account_id: int, revert: bool = False) -> list[tuple[int]]:
+    table = 'TRANSACTIONSTABLE'
 
+    if revert:
+        table = f'CLUE_{table}'
 
-def get_transactions_list(conn: Connection, account_id: int) -> list[tuple[int]]:
     transactions = conn.cursor().execute(
-        'SELECT transactionsTableID FROM TRANSACTIONSTABLE WHERE accountID = ?',
-        (account_id,),
+        f'SELECT transactionsTableID FROM {table} WHERE accountID = {account_id}',
     )
     return transactions.fetchall()
 

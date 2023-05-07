@@ -1,4 +1,3 @@
-import base64
 import re
 from datetime import datetime
 from decimal import Decimal
@@ -9,7 +8,6 @@ from typing import Any
 from typing import Optional
 
 from cluecoins import database as db
-from cluecoins.database import ENCODED_LABEL_PREFIX
 
 
 class Storage:
@@ -70,8 +68,8 @@ class BluecoinsStorage:
             return True
         return False
 
-    def get_account_id(self, account_name: str, revert: bool = False) -> int | None:
-        account_info = db.find_account(self.conn, account_name, revert)
+    def get_account_id(self, account_name: str, clue: bool = False) -> int | None:
+        account_info = db.find_account(self.conn, account_name, clue)
         if account_info is not None:
             return int(account_info[0])
         return None
@@ -82,80 +80,10 @@ class BluecoinsStorage:
             transaction_id = transaction_id_tuple[0]
             db.add_label_to_transaction(self.conn, label_name, transaction_id)
 
-    def encode_account_info(self, account_name: str) -> str | None:
-
-        '''All this is true if the ACCOUNTSTABLE table has a schema:
-
-        CREATE TABLE ACCOUNTSTABLE(
-                        accountsTableID INTEGER PRIMARY KEY,
-                        accountName VARCHAR(63),
-                        accountTypeID INTEGER,
-                        accountHidden INTEGER,
-                        accountCurrency VARCHAR(5),
-                        accountConversionRateNew REAL,
-                        currencyChanged INTEGER,
-                        creditLimit INTEGER,
-                        cutOffDa INTEGER,
-                        creditCardDueDate INTEGER,
-                        cashBasedAccounts INTEGER,
-                        accountSelectorVisibility INTEGER,
-                        accountsExtraColumnInt1 INTEGER,
-                        accountsExtraColumnInt2 INTEGER,
-                        accountsExtraColumnString1 VARCHAR(255),
-                        accountsExtraColumnString2 VARCHAR(255)
-                    );
-        CREATE INDEX 'accountsTable1' ON ACCOUNTSTABLE(accountTypeID);
-        '''
-
-        account_info = db.find_account(self.conn, account_name)
-
-        if account_info is None:
-            return None
-
-        delimiter = ','
-        info: str = delimiter.join([str(value) for value in account_info])
-
-        info_bytes = info.encode("utf-8")
-
-        base64_bytes = base64.b64encode(info_bytes)
-        account_info_base64 = base64_bytes.decode("utf-8")
-
-        return account_info_base64
-
-    def decode_account_info(self, account_name: str) -> tuple[Any, ...]:
-        label_name = f'clue_{account_name}'
-        transaction_id = db.find_transactions_by_label(self.conn, label_name)[0][0]
-
-        labels_list = db.find_labels_by_transaction_id(self.conn, transaction_id)
-
-        for label in labels_list:
-            if not label[0].startswith(ENCODED_LABEL_PREFIX):
-                continue
-
-            label_parts = label[0].split('_')
-            account_info_base64 = label_parts[-1]
-
-            base64_bytes = account_info_base64.encode('utf-8')
-
-            sample_string_bytes = base64.b64decode(base64_bytes)
-            sample_string: str = sample_string_bytes.decode('utf-8')
-
-            account_info_tuple = tuple(sample_string.split(','))
-
-        account_info_list: list[str | None] = list(account_info_tuple)
-
-        for i, info in enumerate(account_info_list):
-            if info == 'None':
-                account_info_list[i] = None
-
-        account_info_list.pop(0)
-        account_info = tuple(account_info_list)
-        return account_info
-
     def create_clue_tables(self, necessary_tables: list[str]) -> None:
         """Create CLUE tables if not exists"""
 
-        # TODO: get table from currently Bluecoins DB 
+        # TODO: get table from currently Bluecoins DB
         path = Path(__file__).parent / 'bluecoins.sql'
         schema = path.read_text()
         queries = schema.split(';')
@@ -179,4 +107,3 @@ class BluecoinsStorage:
     def move_data_to_table_by_id(self, table: str, filter: str, filter_id: int, revert: bool = False) -> None:
         db.copy_data_to_table_by_id(self.conn, table, filter, filter_id, revert)
         db.delete_data_by_id(self.conn, table, filter, filter_id, revert)
-

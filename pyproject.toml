@@ -18,7 +18,7 @@ authors = [
 ]
 
 [project.scripts]
-cluecoins = 'cluecoins.cli:root'
+cluecoins = 'cluecoins.cli:cli'
 
 [tool.hatch.version]
 path = 'src/cluecoins/__init__.py'

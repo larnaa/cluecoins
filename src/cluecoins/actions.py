@@ -1,0 +1,156 @@
+import logging
+from datetime import datetime
+from datetime import timedelta
+from decimal import Decimal
+from pathlib import Path
+
+import click
+import xdg
+
+from cluecoins.cache import QuoteCache
+from cluecoins.database import connect_local_db
+from cluecoins.database import get_base_currency
+from cluecoins.database import get_transactions_list
+from cluecoins.database import iter_accounts
+from cluecoins.database import iter_transactions
+from cluecoins.database import set_base_currency
+from cluecoins.database import transaction
+from cluecoins.database import update_account
+from cluecoins.database import update_transaction
+from cluecoins.storage import BluecoinsStorage
+from cluecoins.storage import Storage
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+def q(v: Decimal, prec: int = 2) -> Decimal:
+    return v.quantize(Decimal(f'0.{prec * "0"}'))
+
+
+def convert(base_currency: str, db_path: str) -> None:
+
+    conn = connect_local_db(db_path)
+
+    storage = Storage(Path(xdg.xdg_data_home()) / 'cluecoins' / 'cluecoins.db')
+    storage.create_quote_table()
+    cache = QuoteCache(storage)
+
+    with transaction(conn) as conn:
+        set_base_currency(conn, base_currency)
+
+        for date, id_, rate, currency, amount in iter_transactions(conn):
+            true_rate = cache.get_price(date, base_currency, currency)
+
+            if true_rate == rate:
+                continue
+
+            amount_original = amount * rate
+            amount_quote = amount_original / true_rate
+
+            update_transaction(conn, id_, true_rate, amount_quote)
+            click.echo(
+                f"==> transaction {id_}: {q(amount_original)} {currency} -> {q(amount_quote)} {base_currency} ({q(true_rate)} {base_currency}{currency})"
+            )
+
+        today = datetime.now() - timedelta(days=1)
+        for id_, currency, rate in iter_accounts(conn):
+            true_rate = cache.get_price(today, base_currency, currency)
+
+            if true_rate == rate:
+                continue
+
+            update_account(conn, id_, true_rate)
+            click.echo(f"==> account {id_}: {q(rate)} {currency} -> {q(true_rate)} {base_currency}{currency}")
+
+    storage.commit()
+
+
+def archive(
+    account_name: str,
+    db_path: str,
+) -> None:
+    """Archive account:
+    1. Create CLUE tables, if doesn't exist: 'CLUE_ACCOUNTSTABLE', 'CLUE_TRANSACTIONSTABLE', 'CLUE_LABELSTABLE'
+    2. Move the account, transactions, and labels to CLUE tables.
+    """
+
+    conn = connect_local_db(db_path)
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+
+        account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            raise Exception(f'Account {account_name} does not exist')
+
+        necessary_tables = ['ACCOUNTSTABLE', 'TRANSACTIONSTABLE', 'LABELSTABLE']
+        bluecoins_storage.create_clue_tables(necessary_tables)
+
+        transactions_list = get_transactions_list(conn, account_id)
+        for transaction_id in transactions_list:
+            bluecoins_storage.move_data_to_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0])
+
+        bluecoins_storage.move_data_to_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id)
+
+        # NOTE: what to do if account already exist in CLUE_ACCOUNTSTABLE?
+        # If account exist - add _2 in the end name of account
+        bluecoins_storage.move_data_to_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id)
+
+
+def unarchive(
+    account_name: str,
+    db_path: str,
+) -> None:
+    """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins tables"""
+
+    conn = connect_local_db(db_path)
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+
+        account_id = bluecoins_storage.get_account_id(account_name, True)
+        if account_id is None:
+            raise Exception(f'Account {account_name} does not exist')
+
+        transactions_list = get_transactions_list(conn, account_id, True)
+        for transaction_id in transactions_list:
+            bluecoins_storage.move_data_to_table_by_id('LABELSTABLE', 'transactionIDLabels', transaction_id[0], True)
+
+        bluecoins_storage.move_data_to_table_by_id('TRANSACTIONSTABLE', 'accountID', account_id, True)
+
+        # NOTE: what to do if account already exist in CLUE_ACCOUNTSTABLE?
+        # If account exist - add _2 in the end name of account
+        bluecoins_storage.move_data_to_table_by_id('ACCOUNTSTABLE', 'accountsTableID', account_id, True)
+
+
+def create_account(
+    ctx: click.Context,
+    account_name: str,
+) -> None:
+    conn = connect_local_db(ctx.obj['path'])
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+
+        account_currency = get_base_currency(conn)
+        bluecoins_storage.create_account(account_name, account_currency)
+
+
+def add_label(
+    ctx: click.Context,
+    account_name: str,
+    label_name: str,
+) -> None:
+    conn = connect_local_db(ctx.obj['path'])
+
+    bluecoins_storage = BluecoinsStorage(conn)
+
+    with transaction(conn) as conn:
+
+        account_id = bluecoins_storage.get_account_id(account_name)
+        if account_id is None:
+            return print("account is not exist")
+        bluecoins_storage.add_label(account_id, label_name)
