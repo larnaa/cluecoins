@@ -78,7 +78,8 @@ def find_account(conn: Connection, account_name: str, revert: bool = False) -> A
         table = f'CLUE_{table}'
 
     account = conn.cursor().execute(
-        f'SELECT * FROM {table} WHERE accountName = {account_name}',
+        f'SELECT * FROM {table} WHERE accountName = ?',
+        (account_name,),
     )
     return account.fetchone()
 

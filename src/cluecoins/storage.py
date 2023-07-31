@@ -155,7 +155,7 @@ class BluecoinsStorage:
     def create_clue_tables(self, necessary_tables: list[str]) -> None:
         """Create CLUE tables if not exists"""
 
-        # TODO: get table from currently Bluecoins DB 
+        # TODO: get table from currently Bluecoins DB
         path = Path(__file__).parent / 'bluecoins.sql'
         schema = path.read_text()
         queries = schema.split(';')
@@ -179,4 +179,3 @@ class BluecoinsStorage:
     def move_data_to_table_by_id(self, table: str, filter: str, filter_id: int, revert: bool = False) -> None:
         db.copy_data_to_table_by_id(self.conn, table, filter, filter_id, revert)
         db.delete_data_by_id(self.conn, table, filter, filter_id, revert)
-

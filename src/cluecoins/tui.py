@@ -141,7 +141,7 @@ def run_tui(db_path: str | None) -> None:
         Close terminal interface.
         """
 
-        if not db_path:
+        if sync.device is not None:
             # FIXME: hardcode
             sync.push_changes_to_app('.ui.activities.main.MainActivity')
         sys.exit(0)
