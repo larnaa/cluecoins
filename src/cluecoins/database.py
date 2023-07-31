@@ -34,7 +34,7 @@ def set_base_currency(conn: Connection, base_currency: str) -> None:
 
 def iter_transactions(conn: Connection) -> Iterator[tuple[datetime, int, Decimal, str, Decimal]]:
     for row in conn.cursor().execute(
-        'SELECT date, transactionsTableID, conversionRateNew, transactionCurrency, amount FROM TRANSACTIONSTABLE ORDER BY date DESC'
+        'SELECT date, transactionsTableID, conversionRateNew, transactionCurrency, amount FROM TRANSACTIONSTABLE WHERE transactionTypeID IN (3, 4) ORDER BY date DESC'
     ):
         date, id_, rate, currency, amount = row
         date = datetime.fromisoformat(date)

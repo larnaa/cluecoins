@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 - Don't try ADB push if database has not been pulled yet.
 - Fixed crash when searching for account.
+- Don't modify exchange rate of transfer and new account transactions.
 
 <!-- Links -->
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
