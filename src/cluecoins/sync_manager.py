@@ -29,5 +29,6 @@ class SyncManager:
 
     def push_changes_to_app(self, activity: str) -> None:
         device = self.get_device()
+        device.pull_db(f'{self.db}.bak')
         device.push_db_root(self.db)
         device.start_app(activity)

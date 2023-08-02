@@ -1,10 +1,8 @@
 import logging
-import subprocess
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 import click
 import xdg
@@ -35,16 +33,6 @@ def q(v: Decimal, prec: int = 2) -> Decimal:
     return v.quantize(Decimal(f'0.{prec * "0"}'))
 
 
-def backup_db(db: Optional[str]) -> None:
-
-    # TODO: add a check if backup_{db} exists
-    subprocess.run(
-        f'cp {db} backup_{db}',
-        shell=True,
-        check=True,
-    )
-
-
 @click.group()
 @click.pass_context
 def root(
@@ -61,7 +49,8 @@ def cli(ctx: click.Context, path: str) -> None:
 
     ctx.obj = {}
     ctx.obj['path'] = path
-    backup_db(path)
+    backup_path = Path(path).parent / (Path(path).name + '.bak')
+    backup_path.write_bytes(Path(path).read_bytes())
 
 
 # new option --db
@@ -71,7 +60,6 @@ def cli(ctx: click.Context, path: str) -> None:
 def tui(ctx: click.Context, db: str | None) -> None:
     from cluecoins.tui import run_tui
 
-    backup_db(db)
     run_tui(db)
 
 
@@ -255,7 +243,6 @@ def add_label(
         bluecoins_storage.add_label(account_id, label_name)
 
 
-
 @cli.command(help='Unarchive account v2')
 @click.option('-a', '--account-name', type=str)
 @click.pass_context
@@ -272,12 +259,12 @@ def _unarchive_v2(
     account: str,
     db_path: str,
 ) -> None:
-    """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins Tables """
+    """Move all data: account, transactions, labels; from Cluecoins tables to Bluecoins Tables"""
 
     conn = connect_local_db(db_path)
-        
+
     bluecoins_storage = BluecoinsStorage(conn)
-    
+
     with transaction(conn) as conn:
 
         account_id = bluecoins_storage.get_account_id(account, True)
